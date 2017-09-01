@@ -57,3 +57,6 @@ The EVSI for the specific design by willingness-to-pay. This can be plotted.
 Compute the EVSI for a fixed design using the Heath et al. method
 INPUTS:
 }
+\examples{
+NULL
+}

@@ -19,7 +19,6 @@ all the values that the EVSI has been calculated for. NOTE: N can be chosen as a
 value but wtp needs to be on the grid chosen in comp.evsi.N.}
 
 \item{CI}{The confidence levels for the credible intervals of the EVSI. If NULL chosen as
-  c(0.025,0.25,0.5,0.75,0.975)
 
 OUTPUTS}
 }

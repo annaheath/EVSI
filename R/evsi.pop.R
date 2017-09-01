@@ -13,7 +13,7 @@ evsi.pop<-function(evsi,trial.cost=NULL,setup=NULL,pp=NULL,
   ##'@param pp Gives the per person costs of the trial. Can be NULL if trial.costs are given.
   ##'@param Pop The minimum and maximum possible values for the number of people benefitting from
   ##'   the treatment
-  ##'@param Time The minimum and maximum possible values for the time horizen of the treatment.
+  ##'@param Time The minimum and maximum possible values for the time horizon of the treatment.
   ##'@param Dis The discount rate for future studies, based on NICE guidelines.
   ##'@param wtp The willingness to pay value that this analysis is being undetaken for.
   ##'   If NULL then the function will automatically select the central wtp to default in BCEA will be 25000
@@ -180,7 +180,7 @@ evsi.pop<-function(evsi,trial.cost=NULL,setup=NULL,pp=NULL,
   }
   #Plotting from Prob.mat
   image(x=Time.seq,y=Pop.seq,z=Prob.mat,col=colours,
-        main="Probability of Cost-Effective Trial",xlab="Time Horizen",ylab="Incidence Population",
+        main="Probability of Cost-Effective Trial",xlab="Time Horizon",ylab="Incidence Population",
         xlim = c(Time.min,Time.max),ylim=c(Pop.min,Pop.max),
         breaks=seq(0,1,length.out=101))
   

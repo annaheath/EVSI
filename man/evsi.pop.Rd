@@ -24,7 +24,7 @@ setup is taken to be 0.}
 \item{Pop}{The minimum and maximum possible values for the number of people benefitting from
 the treatment}
 
-\item{Time}{The minimum and maximum possible values for the time horizen of the treatment.}
+\item{Time}{The minimum and maximum possible values for the time horizon of the treatment.}
 
 \item{Dis}{The discount rate for future studies, based on NICE guidelines.}
 
