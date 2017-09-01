@@ -3,15 +3,16 @@ plot.evsi.N<-function(evsi,wtp=NULL,pos=c("bottomright"),CI=NULL){
   ##'Calculating the EVSI for a specific WTP giving the uncertainty bands across the different
   ##'samples sizes
   ##INPUTS
-  ##'@param comp.evsi.N Output of the comp.evsi.N function
+  ##'@param evsi Output of the comp.evsi.N function
   ##'@param wtp The willingness to pay value that the graphic should be produced for - it will
   ##'   be chosen if wtp=NULL.
-  ##'@param prob The confidence levels for the uncertainty bands.
+  ##'@param pos The position where the legend will be printed (default='bottomright')
   ##'@param CI The indexes that we would like to take from the CI in the evsi object.
   ##'
   ##OUTPUTS
   ##'@return EVSI The EVSI calculated for a specific wtp with uncertainty estimates.
   ##'@return A graphical representation of the uncertainty.
+  
   alt.legend <- pos
   if (is.numeric(alt.legend) & length(alt.legend) == 2) {
     temp <- ""

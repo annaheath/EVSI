@@ -19,6 +19,7 @@ evsi.pop<-function(evsi,trial.cost=NULL,setup=NULL,pp=NULL,
   ##'   If NULL then the function will automatically select the central wtp to default in BCEA will be 25000
   ##'@param N The sample size which we want to consider for the trial. If NULL then taken as the median trial size
   ##'   considered.
+  ##'@param pos The position where the legend will be printed in the resulting graph.
   ##'
   ##OUTPUTS:
   ##' @return A graphic that gives the probability of a cost-effective trial.

@@ -1,23 +1,23 @@
 ##comp.evsi.N############################################################
 comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NULL,parameters=NULL,evi=NULL,Q=50,length.wtp=150,
-                      data.stats=NULL,update=c("BUGS","jags"),
+                      data.stats=NULL,update=c("bugs","jags"),
                       n.burnin=1000,n.thin=1,n.iter=5000){
   ##'Function generates the data points that will be used to calculate the EVSI for different
   ##'sample sizes.
   ##INPUTS.
   ##'@param model.stats A .txt file containing the model file of a Bayesian model.
-  ##'   This should be a BUGS or jags model.
+  ##'   This should be a BUGS or JAGS model.
   ##'@param data A string or vector of strings that defines the name of the future
   ##'   data in the model file. If the future data has already been generated then
   ##'   the data arguement can be given as a list. The elements of the data list should
-  ##'   be data lists for jags or BUGS.
+  ##'   be data lists for JAGS or BUGS.
   ##'@param N A string defining the name of the variable controlling the sample size in the
   ##'   model.
   ##'@param N.range A two-vector defining the minimum and maximum values considered for the
   ##'   sample size. If the future data is given in the data arguement then N.range should
   ##'   give the sample sizes for which the data was generated.
   ##'@param effects This can either be given as a string which defines the name of the
-  ##'   effectivness measure in the BUGS/jags model. Or it can be given as a
+  ##'   effectivness measure in the BUGS/JAGS model. Or it can be given as a
   ##'   function that takes the output of the model and calculates the
   ##'   effectiveness measure. The inputs of this function should be parameter
   ##'   names found in the model file.
@@ -30,17 +30,16 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
   ##'   that are being informed by the sample information.
   ##'@param Q The number of quadrature points used the estimate the EVSI.
   ##'@param length.wtp The number of willingness to pay values that should be considered to estimate the EVSI
-  ##'@param data.stats A data file for the BUGS/jags model. This is the data used to inform
+  ##'@param data.stats A data file for the BUGS/JAGS model. This is the data used to inform
   ##'   the base case analysis. If empty then it is assumed that the models are
   ##'@param update Defines the Bayesian engine that should be used to update the
   ##'   the Bayesian model file given in model.stats.
-  ##'@param n.thin The thinning for the jags/BUGS model
-  ##'@param n.burnin The burnin for the jags/BUGS model
-  ##'@param n.iter The number of interations for the jags/BUGS model
+  ##'@param n.thin The thinning for the JAGS/BUGS model
+  ##'@param n.burnin The burnin for the JAGS/BUGS model
+  ##'@param n.iter The number of interations for the JAGS/BUGS model
   ##'
   ##'OUTPUTS.
   ##'@return An evsi.comp object to be used in the evsi.calc function.
-  ##'...
   
   
   #Is data in the correct format??
@@ -114,6 +113,10 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
   
   #Generate future samples by finding prior-predictive distribution
   if(update=="jags"){#Model can be written in jags.
+    if(!isTRUE(requireNamespace("rjags",quietly=TRUE))) {
+      stop("You need to install the R package 'rjags' and the software 'JAGS'. \nPlease see http://mcmc-jags.sourceforge.net/ for instructions
+           on installing 'JAGS' and then run in your R terminal:\n install.packages('rjags')")
+    }
     #Defines the model parameters that are required to calculate the costs and effects
     moniter<-names(which(sapply(nameofinterest,grep.fun,main=readLines(model.stats))>0))
     
@@ -133,9 +136,9 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
       
       if((cl.dat=="character")|(class(he)!="bcea")|(class(evi)!="evppi")){
         #Runs the jags model based on the rjags package
-        Model.JAGS<- jags.model(model.stats,data=append(Samp.Size,data.stats),quiet=TRUE)
+        Model.JAGS<- rjags::jags.model(model.stats,data=append(Samp.Size,data.stats),quiet=TRUE)
         update(Model.JAGS,n.burnin,progress.bar="none")
-        Prior.Pred <- coda.samples(Model.JAGS, prior.pred.data, n.iter=n.iter,n.thin=n.thin,progress.bar="none")
+        Prior.Pred <- rjags::coda.samples(Model.JAGS, prior.pred.data, n.iter=n.iter,n.thin=n.thin,progress.bar="none")
         PP.sample<-as.data.frame(Prior.Pred[[1]])
       }
       
@@ -164,6 +167,10 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
       }
       
       if(class(he)!="bcea"){
+        # Checks if BCEA is installed (and if not, asks for it)
+        if(!isTRUE(requireNamespace("BCEA",quietly=TRUE))) {
+          stop("You need to install the R package 'BCEA'. Please run in your R terminal:\n install.packages('BCEA')")
+        }
         #Calculate costs and effects for all simulations
         i<-1
         #Set function arguements
@@ -181,13 +188,17 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
           formals(costs)<-find.args(costs,PP.sample,i)
           c[i,]<-costs()
         }
-        he<-bcea(e,c)
+        he<-BCEA::bcea(e,c)
       }
       #Check number of interventions
       if(he$n.comparisons>1){stop("WARNING:This EVSI calculation method is currently not implemented for
                                   multi-decision problems")}
       
       if(class(evi)!="evppi"){
+        # Checks if BCEA is installed (and if not, asks for it)
+        if(!isTRUE(requireNamespace("BCEA",quietly=TRUE))) {
+          stop("You need to install the R package 'BCEA'. Please run in your R terminal:\n install.packages('BCEA')")
+        }
         #Determine which model rows contain statements defining the data
         #lines.imp<-list()
         #for(l in 1:length(data)){
@@ -205,17 +216,17 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
         }
         of.interest<-unlist(index)
         #PSA.mat<-as.matrix(PP.sample[,unlist(index)])
-        evi<-evppi(of.interest,PP.sample,he)
+        evi<-BCEA::evppi(of.interest,PP.sample,he)
       }
       
       
       
       #Both data sets must be given to jags
       data.full<-append(append(Data.Fut,data.stats),Samp.Size)
-      
-      Model.JAGS<- jags.model(model.stats,data =  data.full,quiet = TRUE)
+
+      Model.JAGS<- rjags::jags.model(model.stats,data =  data.full,quiet = TRUE)
       update(Model.JAGS,n.burnin,progress.bar="none")
-      samples <- coda.samples(Model.JAGS, moniter, n.iter=n.iter,n.thin=n.thin,n.chain=1,progress.bar="none")
+      samples <- rjags::coda.samples(Model.JAGS, moniter, n.iter=n.iter,n.thin=n.thin,n.chain=1,progress.bar="none")
       #Create a dataframe containing all the JAGS samples
       sample<-as.data.frame(samples[[1]])
       
@@ -248,8 +259,14 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
       print(paste("Update",q,"completed"))
       }
   }
+
   #Analysis in BUGS
-  if(update=="BUGS"){#Model can be written in BUGS.
+  if(update=="bugs"){ #Model can be written in BUGS.
+    # Checks if R2OpenBUGS is installed (and if not, asks for it)
+    if(!isTRUE(requireNamespace("R2OpenBUGS",quietly=TRUE))) {
+      stop("You need to install the R package 'R2OpenBUGS' and the software 'OpenBUGS'. \nPlease see http://www.openbugs.net/w/FrontPage for instructions
+           on installing 'OpenBUGS' and then run in your R terminal:\n install.packages('R2OpenBUGS')")
+    }
     #Defines the model parameters that are required to calculate the costs and effects
     moniter<-names(which(sapply(nameofinterest,grep.fun,main=readLines(model.stats))>0))
     
@@ -268,7 +285,7 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
       
       if((cl.dat=="character")|(class(he)!="bcea")|(class(evi)!="evppi")){
         #Runs the BUGS model based on the R2OpenBUGS package
-        Model.BUGS<- bugs(data.stats,inits=NULL,parameters.to.save=append(prior.pred.data,Samp.Size),
+        Model.BUGS<- R2OpenBUGS::bugs(data.stats,inits=NULL,parameters.to.save=append(prior.pred.data,Samp.Size),
                           model.file=model.stats, n.burnin=n.burnin,n.iter=n.iter+n.burnin,n.thin=n.thin,n.chain=1,
                           DIC=FALSE,debug=FALSE)
         PP.sample<-as.data.frame(Model.BUGS$sims.matrix)
@@ -300,6 +317,9 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
       }
       
       if(class(he)!="bcea"){
+        if(!isTRUE(requireNamespace("BCEA",quietly=TRUE))) {
+          stop("You need to install the R package 'BCEA'. Please run in your R terminal:\n install.packages('BCEA')")
+        }
         #Calculate costs and effects for all simulations
         i<-1
         #Set function arguements
@@ -317,13 +337,16 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
           formals(costs)<-find.args(costs,PP.sample,i)
           c[i,]<-costs()
         }
-        he<-bcea(e,c)
+        he<-BCEA::bcea(e,c)
       }
       #Check number of interventions
       if(he$n.comparisons>1){stop("WARNING:This EVSI calculation method is currently not implemented for
                                   multi-decision problems")}
       
       if(class(evi)!="evppi"){
+        if(!isTRUE(requireNamespace("BCEA",quietly=TRUE))) {
+          stop("You need to install the R package 'BCEA'. Please run in your R terminal:\n install.packages('BCEA')")
+        }
         #Determine which model rows contain statements defining the data
         #lines.imp<-list()
         #for(l in 1:length(data)){
@@ -341,14 +364,14 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
         }
         of.interest<-unlist(index)
         #PSA.mat<-as.matrix(PP.sample[,unlist(index)])
-        evi<-evppi(of.interest,PP.sample,he)
+        evi<-BCEA::evppi(of.interest,PP.sample,he)
       }
       
       #Both data sets must be given to jags
       data.full<-append(append(Data.Fut,data.stats),Samp.Size)
-      ####Calculate EVSI by Quadrature####
       
-      Model.BUGS<- bugs(data.full,inits=NULL,parameters.to.save=moniter,
+      ####Calculate EVSI by Quadrature####
+            Model.BUGS<- R2OpenBUGS::bugs(data.full,inits=NULL,parameters.to.save=moniter,
                         model.file=model.stats, n.burnin=n.burnin,n.iter=n.iter+n.burnin,n.thin=n.thin,n.chains=1,
                         DIC=FALSE,debug=FALSE)
       #Create a dataframe containing all the BUGS samples
@@ -381,11 +404,15 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
                   sep="",collapse = ""))
       }
       print(paste("Update",q,"completed"))
-      } }
+    } 
+  }
   
   #Calcualte the EVSI accross different WTP
   print("Using curve fitting to find EVSI for alternative sample sizes")
   wtp.seq<-seq(min(he$k),max(he$k),length.out=length.wtp)
+  ##### GB: Need to define the variables var.PI and x, or else when compiling the package R will throw a message for no-bindings
+  var.PI=x=NULL
+  #####
   model.ab<-function(){
     beta~dnorm(Nmax/2,shape.Nmax)%_%T(0,)
     for(i in 1:N){
@@ -396,7 +423,16 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
     tau<-1/sigma^2
   }
   file.curve.fitting <- file.path("~",fileext="model_curve_fitting_EVSI.txt")
-  write.model(model.ab,file.curve.fitting)
+  
+  ####### GB: NB --- to do this bit, you are using R2OpenBUGS::write.model
+  #######     which means that the user *needs* to have R2OpenBUGS (and thus, OpenBUGS) installed
+  #######     even if the rest of the analysis has been done in JAGS!
+  # Checks if R2OpenBUGS is installed (and if not, asks for it)
+  if(!isTRUE(requireNamespace("R2OpenBUGS",quietly=TRUE))) {
+    stop("You need to install the R package 'R2OpenBUGS' and the software 'OpenBUGS'. \nPlease see http://www.openbugs.net/w/FrontPage for instructions
+           on installing 'OpenBUGS' and then run in your R terminal:\n install.packages('R2OpenBUGS')")
+  }
+  R2OpenBUGS::write.model(model.ab,file.curve.fitting)
   
   beta.mat<-array(NA,dim=c(3000,length(wtp.seq)))
   k.<-1
@@ -419,15 +455,24 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
                    x=as.vector(N.samp)
     )
     
+    ####### GB: Should these parameters be modifiable???
     n.burnin <- 1000  # Number of burn in iterations
     n.thin<-1
     n.iter <- 3000 # Number of iterations per chain
+    #######
     
     # Perform the MCMC simulation with JAGS.
+    ####### GB: But what if the user doesn't have JAGS and only has BUGS?
+    ####### Or do  we *need* them to have JAGS?
     #Runs the jags model based on the rjags package
-    Model.JAGS<- jags.model(file.curve.fitting,data=data.a.b,quiet=TRUE)
+    # Checks if rjags is installed (and if not, asks for it)
+    if(!isTRUE(requireNamespace("rjags",quietly=TRUE))) {
+      stop("You need to install the R package 'rjags' and the software 'JAGS'. \nPlease see http://mcmc-jags.sourceforge.net/ for instructions
+           on installing 'JAGS' and then run in your R terminal:\n install.packages('rjags')")
+    }
+    Model.JAGS<- rjags::jags.model(file.curve.fitting,data=data.a.b,quiet=TRUE)
     update(Model.JAGS,n.burnin,progress.bar="none")
-    beta.ab <- coda.samples(Model.JAGS, c("beta"), n.iter=n.iter,n.thin=n.thin,progress.bar="none")
+    beta.ab <- rjags::coda.samples(Model.JAGS, c("beta"), n.iter=n.iter,n.thin=n.thin,progress.bar="none")
     
     beta.mat[,k.]<-as.data.frame(beta.ab[[1]])[,1]
     
@@ -448,5 +493,4 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
                   he=he)
   class(to.return)<-"evsi.N"
   return(to.return)
-  
-  }
+}

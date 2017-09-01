@@ -57,10 +57,13 @@ evsi.upload<-function(e,c,parameter,input,EVSI.mat=NULL,model.stats=NULL,wtp=NUL
   EVSI.arr<-array(EVSI.mat,c(dim(EVSI.mat),1))
   
   #Find BCEA object
-  he<-bcea(e,c)
+  if(!isTRUE(requireNamespace("BCEA",quietly=TRUE))) {
+    stop("You need to install the R package 'BCEA'. Please run in your R terminal:\n install.packages('BCEA')")
+  }
+  he<-BCEA::bcea(e,c)
   
   #Calculate EVPPI object
-  evi<-evppi(parameter,input,he,method="gam")
+  evi<-BCEA::evppi(parameter,input,he,method="gam")
   
   to.return<-list(evsi=EVSI.arr,attrib=list(wtp=wtp,N=N,CI=0.5),evppi=evi,he=he)
   class(to.return)<-"evsi"

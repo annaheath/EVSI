@@ -10,6 +10,7 @@ optim.ss<-function(evsi,setup,pp,Pop,Time,wtp=NULL,Dis=0.035){
   ##'@param Pop The incidence population level
   ##'@param Time The time horizon.
   ##'@param wtp The willingness-to-pay value
+  ##'@param Dis The Discount rate (default at 0.035)
   ##OUTPUTS
   ##'@return SS The optimal sample size.
   ##'@return SS.CI Credible intervals for the optimal sample size. TO BE IMPLEMENTED
