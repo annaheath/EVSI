@@ -562,7 +562,7 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
       }
 
       if(cl.dat=="character"){
-        #Determine which columns contain the data
+                #Determine which columns contain the data
         index.data<-list()
         for(l in 1:length(data)){
           index.data[[l]]<-grep(data[l],colnames(PP.sample))
@@ -572,7 +572,7 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
         Data.Fut<-array()
         for(d in 1:length.data){
           #Creating list of the future data to give to jags
-          Data.Fut[d]<-as.numeric(quantile(PP.sample[,unlist(index.data)[d]],probs=quantiles[q]))
+          Data.Fut[unlist(index.data)[d]]<-as.numeric(quantile(PP.sample[,unlist(index.data)[d]],probs=quantiles[q]))
         }
         Data.Fut.list<-list()
         for(d in 1:length(index.data)){
