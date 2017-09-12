@@ -12,8 +12,11 @@ optim.ss<-function(evsi,setup,pp,Pop,Time,wtp=NULL,Dis=0.035){
   ##'@param wtp The willingness-to-pay value
   ##'@param Dis The Discount rate (default at 0.035)
   ##OUTPUTS
-  ##'@return SS The optimal sample size.
-  ##'@return SS.CI Credible intervals for the optimal sample size. TO BE IMPLEMENTED
+  ##'@return SS.max The optimal sample size.
+  ##'@return ENBS The Expected Net Benefit of Sampling at the optimal sample size
+  ##'@return SS.I The interval for which the ENBS is within 5% of the maximum ENBS
+  ##'@return ENBS.I The ENBS values which correspond to 5% of the maximum ENBS - 
+  ##'   used for plotting purposes.
   
   #evsi object?
   if(class(evsi)!="evsi"){stop("evsi must be in the evsi class - please create with either the evsi.calc or evsi.upload functions")}
@@ -40,7 +43,7 @@ optim.ss<-function(evsi,setup,pp,Pop,Time,wtp=NULL,Dis=0.035){
   max.select<-which.max(ENBS)
   max.less<-max.select-1
   max.greater<-max.select+1
-  if((max.less<1)||(max.greater>length(ENBS))){
+  if((max.less<1)|(max.greater>length(ENBS))){
     N.max<-evsi$attrib$N[max.select]
     ENBS.max<-ENBS[max.select]
     warning("Optimal sample size is at the limit of the considered values for N. An alternative sample size may be optimal,
@@ -54,6 +57,15 @@ optim.ss<-function(evsi,setup,pp,Pop,Time,wtp=NULL,Dis=0.035){
     N.max<-round(-model.optim$coefficients[2]/(2*model.optim$coefficients[3]))
     ENBS.max<-predict(model.optim,list(N.fit=N.max,N2=N.max^2))}
   
-  return(list(SS.max=N.max,ENBS=ENBS.max))
+  ##Creating a tolerance for the flat part of the graphic
+  tol<-ENBS.max-abs(ENBS.max*0.05)
+  limits<-which(ENBS>tol)
+  N.range<-range(evsi$attrib$N[limits])
+  ENBS.range<-ENBS[which(evsi$attrib$N %in% N.range)]
+  
+  
+  return(list(SS.max=N.max,ENBS=ENBS.max,SS.I=N.range,ENBS.I=ENBS.range))
   
 }
+
+
