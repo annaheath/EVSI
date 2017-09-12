@@ -162,7 +162,7 @@ enbs.plot<-function(evsi,setup,pp,prob=NULL,
   optimal<-optim.ss(evsi,setup,pp,Pop,Time,wtp=wtp,Dis=Dis)
   
   points(optimal$SS.max,optimal$ENBS,pch=4,lwd=2,cex=1.2,col="red2")
-  points(optimal$SS.CI,optimal$ENBS.I,pch="|",col="red2",cex=1.2,lty=3)
+  points(optimal$SS.I,optimal$ENBS.I,pch="|",col="red2",cex=1.2,lty=3)
   
 }
 
