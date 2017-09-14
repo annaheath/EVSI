@@ -191,8 +191,8 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
         he<-BCEA::bcea(e,c)
       }
       #Check number of interventions
-      if(he$n.comparisons>1){stop("WARNING:This EVSI calculation method is currently not implemented for
-                                  multi-decision problems")}
+      #if(he$n.comparisons>1){stop("WARNING:This EVSI calculation method is currently not implemented for
+      #                            multi-decision problems")}
 
       if(class(evi)!="evppi"){
         # Checks if BCEA is installed (and if not, asks for it)
@@ -231,26 +231,24 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
       sample<-as.data.frame(samples[[1]])
 
       #Use the JAGS output as inputs for the effects and costs functions
-      e.int<-c.int<-array()
-      length(e.int)<-length(c.int)<-dim(sample)[1]
+      int<-matrix(NA,nrow=dim(sample)[1],ncol=2*he$n.comparisons)
 
       #Calculate costs and effects for all simulations
+      #int<-foreach(i=1:dim(sample)[1],.combine="rbind") %do% {
       for(i in 1:dim(sample)[1]){
         #Set function arguements
         formals(effects)<-find.args(effects,sample,i)
         #Runs model with all arguements set as above
         model.effects<-effects()
         #Calculate the incremental effects.
-        e.int[i]<-model.effects[-he$ref]-model.effects[he$ref]
-
         #Repeat analysis for costs
         #Set function arguements
         formals(costs)<-find.args(costs,sample,i)
         model.costs<-costs()
-        c.int[i]<-model.costs[-he$ref]-model.costs[he$ref]
+        int[i,]<-cbind(model.effects[-he$ref]-model.effects[he$ref],model.costs[-he$ref]-model.costs[he$ref])
       }
       #Calculate the preposterior variance matrix for the costs and effects to calculate EVSI by WTP
-      var.prepost[[q]]<-var(cbind(e.int,c.int))
+      var.prepost[[q]]<-var(int)
       if(q==1){end<-Sys.time()
       comp.time<-end-start
       print(paste(c("Model updating requires ",round(comp.time,2)," seconds. The EVSI will be calculated using ",Q," model updates. The remaining computation time is around ",round(comp.time*(Q-1)/60,0)," minutes. The current time is ",strftime(Sys.time())),
@@ -340,8 +338,8 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
         he<-BCEA::bcea(e,c)
       }
       #Check number of interventions
-      if(he$n.comparisons>1){stop("WARNING:This EVSI calculation method is currently not implemented for
-                                  multi-decision problems")}
+      #if(he$n.comparisons>1){stop("WARNING:This EVSI calculation method is currently not implemented for
+      #                            multi-decision problems")}
 
       if(class(evi)!="evppi"){
         if(!isTRUE(requireNamespace("BCEA",quietly=TRUE))) {
@@ -378,26 +376,25 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
       sample<-as.data.frame(Model.BUGS$sims.matrix)
 
       #Use the BUGS output as inputs for the effects and costs functions
-      e.int<-c.int<-array()
-      length(e.int)<-length(c.int)<-dim(sample)[1]
+      #Use the JAGS output as inputs for the effects and costs functions
+      int<-matrix(NA,nrow=dim(sample)[1],ncol=2*he$n.comparisons)
 
       #Calculate costs and effects for all simulations
+      #int<-foreach(i=1:dim(sample)[1],.combine="rbind") %do% {
       for(i in 1:dim(sample)[1]){
         #Set function arguements
         formals(effects)<-find.args(effects,sample,i)
         #Runs model with all arguements set as above
         model.effects<-effects()
         #Calculate the incremental effects.
-        e.int[i]<-model.effects[-he$ref]-model.effects[he$ref]
-
         #Repeat analysis for costs
         #Set function arguements
         formals(costs)<-find.args(costs,sample,i)
         model.costs<-costs()
-        c.int[i]<-model.costs[-he$ref]-model.costs[he$ref]
+        int[i,]<-cbind(model.effects[-he$ref]-model.effects[he$ref],model.costs[-he$ref]-model.costs[he$ref])
       }
       #Calculate the preposterior variance matrix for the costs and effects to calculate EVSI by WTP
-      var.prepost[[q]]<-var(cbind(e.int,c.int))
+      var.prepost[[q]]<-var(int)
       if(q==1){end<-Sys.time()
       comp.time<-end-start
       print(paste(c("Model updating requires ",round(comp.time,2)," seconds. The EVSI will be calculated using ",Q," model updates. The remaining computation time is around ",round(comp.time*(Q-1)/60,0)," minutes. The current time is ",strftime(Sys.time())),
@@ -413,43 +410,54 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
   ##### GB: Need to define the variables var.PI and x, or else when compiling the package R will throw a message for no-bindings
   var.PI=x=NULL
   #####
-  model.ab<-function(){
-    beta~dnorm(Nmax/2,shape.Nmax)%_%T(0,)
-    for(i in 1:N){
-      y[i]~dnorm(mu[i],tau)
-      mu[i]<-var.PI*(x[i]/(x[i]+beta))
+  #Write the Model - remove need for R2OpenBUGS so can run with just JAGS.
+  model.ab<-c("model
+{
+    beta ~ dnorm(Nmax/2, shape.Nmax)  T(0.00000E+00, )
+    for (i in 1:N) {
+        y[i] ~ dnorm(mu[i], tau)
+        mu[i] <- var.PI * (x[i]/(x[i] + beta))
     }
-    sigma~dt(sigma.mu,sigma.tau,3)%_%T(0,)#dunif(0.01,50)
-    tau<-1/sigma^2
-  }
+    sigma ~ dt(sigma.mu, sigma.tau, 3)  T(0.00000E+00, )
+    tau <- 1/sigma^2
+}
+")
   file.curve.fitting <- file.path("~",fileext="model_curve_fitting_EVSI.txt")
+  writeLines(model.ab,file.curve.fitting)
 
-  ####### GB: NB --- to do this bit, you are using R2OpenBUGS::write.model
-  #######     which means that the user *needs* to have R2OpenBUGS (and thus, OpenBUGS) installed
-  #######     even if the rest of the analysis has been done in JAGS!
-  # Checks if R2OpenBUGS is installed (and if not, asks for it)
-  if(!isTRUE(requireNamespace("R2OpenBUGS",quietly=TRUE))) {
-    stop("You need to install the R package 'R2OpenBUGS' and the software 'OpenBUGS'. \nPlease see http://www.openbugs.net/w/FrontPage for instructions
-           on installing 'OpenBUGS' and then run in your R terminal:\n install.packages('R2OpenBUGS')")
+
+  CreateCov<-function(cov,i,j,d,k){
+    cov.i.j<-k^2*cov[i,j]-k*(cov[i,d+j]+cov[d+i,j])+cov[d+i,d+j]
+    return(cov.i.j)
   }
-  R2OpenBUGS::write.model(model.ab,file.curve.fitting)
 
-  beta.mat<-array(NA,dim=c(3000,length(wtp.seq)))
+  n.unique.entries<-he$n.comparisons+choose(he$n.comparisons,2)
+  beta.mat<-array(NA,dim=c(3000,length(wtp.seq),n.unique.entries))
   k.<-1
   start<-Sys.time()
+  #for k over the wtp dimension
   for(k in wtp.seq){
-    Var.X.prob<-k^2*simplify2array(var.prepost)[1,1,]+simplify2array(var.prepost)[2,2,]-
-      2*k*simplify2array(var.prepost)[1,2,]
+    #WTP level calculations
+    fitted.wtp<--(k*evi$fitted.effects[,-he$n.comparators]-evi$fitted.costs[,-he$n.comparators])
+    #IS THIS DEFINTIELY THE RIGHT INB.full?? Careful with the different ks...he$k and wtp...
+    INB.full<--(k*he$delta.e-he$delta.c)
+    #Variance of the fitted INB
+    var.INB<-as.matrix(var(fitted.wtp))
+    #Variance of the full INB
+    var.full<-as.matrix(var(INB.full))
 
-    fitted.wtp<-k*evi$fitted.effects[,1]-evi$fitted.costs[,1]
-    full.wtp<-k*he$delta.e-he$delta.c
-    y<-t(var(full.wtp)-Var.X.prob)
+    n.entry<-1
+    for(i in 1:he$n.comparisons){
+      for(j in i:he$n.comparisons){
+    Var.X.prob<-sapply(var.prepost,CreateCov,i=i,j=j,d=he$n.comparisons,k=k)
+
+    y<-t(var.full[i,j]-Var.X.prob)
 
     data.a.b<-list(sigma.mu=sd(y)/2,
                    sigma.tau=1/sd(y),
                    N=length(N.samp),
                    shape.Nmax=0.0005/max(N.samp),
-                   var.PI=var(fitted.wtp),
+                   var.PI=var(fitted.wtp)[i,j],
                    Nmax=max(N.samp),
                    y=as.vector(y),
                    x=as.vector(N.samp)
@@ -474,7 +482,10 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
     update(Model.JAGS,n.burnin,progress.bar="none")
     beta.ab <- rjags::coda.samples(Model.JAGS, c("beta"), n.iter=n.iter,n.thin=n.thin,progress.bar="none")
 
-    beta.mat[,k.]<-as.data.frame(beta.ab[[1]])[,1]
+    beta.mat[,k.,n.entry]<-as.data.frame(beta.ab[[1]])[,1]
+    n.entry<-n.entry+1
+      }
+    }
 
     if(k.==1){end<-Sys.time()
     comp.time<-end-start

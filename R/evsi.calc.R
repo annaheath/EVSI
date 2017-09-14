@@ -22,7 +22,7 @@ evsi.calc<-function(comp.evsi.N,wtp=NULL,N=NULL,CI=NULL){
   ##'   economic model
   ##'   @example
   ##'   ...
-  
+
   if(class(comp.evsi.N)!="evsi.N"){stop("comp.evsi.N must be calculated using the comp.evsi.N function. Please use this function. evsi objects can be created using the evsi.upload function.")}
   #Format wtp
   cl<-class(wtp)
@@ -37,7 +37,7 @@ evsi.calc<-function(comp.evsi.N,wtp=NULL,N=NULL,CI=NULL){
       wtp[i]<-comp.evsi.N$wtp[which.min(abs(wtp[i]-comp.evsi.N$wtp))]
     }
   }
-  
+
   #Format N
   cl<-class(N)
   #Select all N values if NULL
@@ -45,7 +45,7 @@ evsi.calc<-function(comp.evsi.N,wtp=NULL,N=NULL,CI=NULL){
     N<-seq(min(comp.evsi.N$N),max(comp.evsi.N$N),by=10)
   }
   N.length<-length(N)
-  
+
   #Format CI
   cl<-class(CI)
   #Set the default CI values if NULL
@@ -59,26 +59,41 @@ evsi.calc<-function(comp.evsi.N,wtp=NULL,N=NULL,CI=NULL){
   }
   #Use CI to create a beta matrix
   #Find the appropriate quantiles for the beta parameter of interest
-  beta.quantiles<-apply(comp.evsi.N$beta,2,quantile,prob=CI)
-  
+  beta.quantiles<-apply(comp.evsi.N$beta,c(2,3),quantile,prob=CI)
+
   #Extracting the beta parameter for the wtp of interest
-  beta.focal<-as.matrix(beta.quantiles[,which(comp.evsi.N$wtp%in%wtp)])
-  
+  beta.focal<-as.matrix(beta.quantiles[,which(comp.evsi.N$wtp%in%wtp),])
+
   EVSI.mat<-array(NA,dim=c(N.length,wtp.length,CI.length))
-  
-  non.zero<-which(colSums(comp.evsi.N$evi$fitted.effects)!=0)
+  INB.full<-array(he$ib,c(length(he$k),he$n.sim,he$n.comparisons))
+
   calc.EVSI<-function(beta.focal,wtp,N){
+    INB.full<--(k*he$delta.e-he$delta.c)
+    var.full<-as.matrix(var(INB.full))
     #Find the fitted values for the wtp
-    fitted.PI<-wtp*comp.evsi.N$evi$fitted.effects[,non.zero]-comp.evsi.N$evi$fitted.costs[,non.zero]
+    fitted.PI<-wtp*comp.evsi.N$evi$fitted.effects[,comp.evsi.N$he$n.comparators]-
+      comp.evsi.N$evi$fitted.costs[,comp.evsi.N$he$n.comparators]
     #Variance for a specific N and beta
     var.pre<-var(fitted.PI)*(N/(N+beta.focal))
+
+    if(comp.evsi.N$he$n.comparisons==1){
+      pre.post.var<-max(0,var.full-Var)
+      INB.star<-(fitted.PI-mean(fitted.PI))/sd(fitted.PI)*sqrt(pre.post.var)+mean(fitted.PI)
+      }
     #Rescaled fitted values
-    fitted.star<-(fitted.PI-mean(fitted.PI))/sd(fitted.PI)*sqrt(var.pre)+mean(fitted.PI)
+    if(he$n.comparisons>1){pre.post.var<-var.full-Var
+    check<-base::eigen(pre.post.var)
+    pre.post.var<-check$vectors%*%diag(pmax(0,check$values))%*%solve(check$vectors)
+    #Rescale fitted INB
+    INB.star<-  sweep(as.matrix(sweep(INB,2,base::colMeans(INB)))%*%solve(expm::sqrtm(var.INB))%*%
+                        base::Re(expm::sqrtm(pre.post.var)),2,base::colMeans(INB),"+")}
     #Calculate EVSI
-    EVSI<-mean(pmax(fitted.star,0))-max(mean(fitted.star),0)
+    EVSI<-mean(apply(cbind(INB.star,0),1,max))-max(apply(cbind(INB.star,0),2,mean))
     return(EVSI)
   }
-  
+
+  ####THINK ABOUT THE STRUCTURE OF THE beta.focal MATRIX...
+  beta.foc<-array(NA,dim=c(comp.evsi.N$he$n.comparisons,comp.evsi.N$he$n.comparisons,wtp.length,CI.length))
   for(i in 1:CI.length){
     for(j in 1:wtp.length){
       EVSI.mat[,j,i]<-sapply(N,calc.EVSI,beta.focal=beta.focal[i,j],wtp=wtp[j])
