@@ -186,7 +186,7 @@ evsi<-function(model.stats,data,effects=NULL,costs=NULL,he=NULL,evi=NULL,paramet
       }
       of.interest<-unlist(index)
       #PSA.mat<-as.matrix(PP.sample[,unlist(index)])
-      evi<-BCEA::evppi(of.interest,PP.sample,he,h.value=0.00000001)
+      evi<-BCEA::evppi(of.interest,PP.sample,he)
     }
 
 
@@ -395,7 +395,7 @@ evsi<-function(model.stats,data,effects=NULL,costs=NULL,he=NULL,evi=NULL,paramet
   }
 
   CreateCov<-function(cov,i,j,d,k){
-    cov.i.j<-k^2*cov[i,j]-k*(cov[i,d+j]+cov[d+i,j])+cov(d+i,d+j)
+    cov.i.j<-k^2*cov[i,j]-k*(cov[i,d+j]+cov[d+i,j])+cov[d+i,d+j]
     return(cov.i.j)
   }
 
@@ -405,23 +405,29 @@ evsi<-function(model.stats,data,effects=NULL,costs=NULL,he=NULL,evi=NULL,paramet
   k.<-1
   #EVSI[,1:length(he$k),]<-foreach(k=he$k,.combine="c") %do% {
   for(k in he$k){
-    #Fitted INB for each k
-    INB<-as.matrix(k*evi$fitted.effects[,-he$comparators]-evi$fitted.costs[,-he$comparators])
+    #Fitted INB for each k - the fitted INB is negative because of how the evppi function works, CAN I REMEMBER WHY??
+    INB<-(-as.matrix(k*evi$fitted.effects[,-he$n.comparators]-evi$fitted.costs[,-he$n.comparators]))
+    #Variance of the fitted INB
     var.INB<-as.matrix(var(INB))
-    var.full<-as.matrix(var(he$ib[k.,]))
+    #Variance of the full INB
+    var.full<-as.matrix(var(he$ib[k.,,]))
     #Mean preposterior variance for each k
-    Var<-matrix(NA, nrow=he$comparisons,ncol=he$comparisons)
-    for(i in 1:he$comparisons){
+    Var<-matrix(NA, nrow=he$n.comparisons,ncol=he$n.comparisons)
+    for(i in 1:he$n.comparisons){
       for(j in 1:i)
-        Var[i,j]<-Var[j,i]<-CreateCov(mean.var,i,j,he$comparisons,k)
+        Var[i,j]<-Var[j,i]<-CreateCov(mean.var,i,j,he$n.comparisons,k)
     }
     #Var<-k^2*mean.var[1,1]+mean.var[2,2]-2*k*mean.var[1,2]
+    #Ensure that the preposterior variance is a positive definite matrix - to avoid simulation error.
+    pre.post.var<-var.full-Var
+    check<-base::eigen(pre.post.var)
+    pre.post.var<-check$vectors%*%diag(pmax(0,check$values))%*%solve(check$vectors)
     #Rescale fitted INB
-    INB.star<-  sweep(as.matrix(sweep(INB,2,colMeans(INB)))%*%solve(expm::sqrtm(var.INB))%*%
-                        expm::sqrtm(var.INB-Var),2,colMeans(INB),"+")
+    INB.star<-  sweep(as.matrix(sweep(INB,2,base::colMeans(INB)))%*%solve(expm::sqrtm(var.INB))%*%
+                        base::Re(expm::sqrtm(pre.post.var)),2,base::colMeans(INB),"+")
       #(INB-mean(INB))/sd(INB)*sqrt(max(0,var(he$ib[k.,])-Var))+mean(INB)
     #Calculate EVSI
-    EVSI[,k.,]<-mean(pmax(INB.star,0))-max(mean(INB.star),0)
+    EVSI[,k.,]<-mean(apply(cbind(INB.star,0),1,max))-max(apply(INB.star,2,mean),0)
     k.<-k.+1
   }
   #Return EVSI, plus evppi object and bcea object to plot EVSI plus attrib which fits in with later objects..
