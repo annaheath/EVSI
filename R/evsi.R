@@ -402,6 +402,7 @@ evsi<-function(model.stats,data,effects=NULL,costs=NULL,he=NULL,evi=NULL,paramet
   #Calcualte the EVSI accross different WTP
   mean.var<-apply(simplify2array(var.prepost),1:2,mean)
   EVSI<-array(NA,dim=c(1,length(he$k),1))
+  INB.full<-array(he$ib,c(length(he$k),he$n.sim,he$n.comparisons))
   k.<-1
   #EVSI[,1:length(he$k),]<-foreach(k=he$k,.combine="c") %do% {
   for(k in he$k){
@@ -410,7 +411,7 @@ evsi<-function(model.stats,data,effects=NULL,costs=NULL,he=NULL,evi=NULL,paramet
     #Variance of the fitted INB
     var.INB<-as.matrix(var(INB))
     #Variance of the full INB
-    var.full<-as.matrix(var(he$ib[k.,,]))
+    var.full<-as.matrix(var(INB.full[k.,,]))
     #Mean preposterior variance for each k
     Var<-matrix(NA, nrow=he$n.comparisons,ncol=he$n.comparisons)
     for(i in 1:he$n.comparisons){
@@ -419,15 +420,16 @@ evsi<-function(model.stats,data,effects=NULL,costs=NULL,he=NULL,evi=NULL,paramet
     }
     #Var<-k^2*mean.var[1,1]+mean.var[2,2]-2*k*mean.var[1,2]
     #Ensure that the preposterior variance is a positive definite matrix - to avoid simulation error.
-    pre.post.var<-var.full-Var
+    if(he$n.comparisons==1){pre.post.var<-max(0,var.full-Var)
+    INB.star<-(INB-mean(INB))/sd(INB)*sqrt(pre.post.var)+mean(INB)}
+    if(he$n.comparisons>1){pre.post.var<-var.full-Var
     check<-base::eigen(pre.post.var)
     pre.post.var<-check$vectors%*%diag(pmax(0,check$values))%*%solve(check$vectors)
     #Rescale fitted INB
     INB.star<-  sweep(as.matrix(sweep(INB,2,base::colMeans(INB)))%*%solve(expm::sqrtm(var.INB))%*%
-                        base::Re(expm::sqrtm(pre.post.var)),2,base::colMeans(INB),"+")
-      #(INB-mean(INB))/sd(INB)*sqrt(max(0,var(he$ib[k.,])-Var))+mean(INB)
+                        base::Re(expm::sqrtm(pre.post.var)),2,base::colMeans(INB),"+")}
     #Calculate EVSI
-    EVSI[,k.,]<-mean(apply(cbind(INB.star,0),1,max))-max(apply(INB.star,2,mean),0)
+    EVSI[,k.,]<-mean(apply(cbind(INB.star,0),1,max))-max(apply(cbind(INB.star,0),2,mean))
     k.<-k.+1
   }
   #Return EVSI, plus evppi object and bcea object to plot EVSI plus attrib which fits in with later objects..
