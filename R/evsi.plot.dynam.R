@@ -204,22 +204,21 @@ evsi.plot.dynam<-function(evsi,width=600,height=600){
                                                                                                                choices=round(evsi$attrib$wtp,rounding),
                                                                                                                selected=round(evsi$attrib$wtp[which.min((evsi$attrib$wtp-evsi$he$kstar)^2)],rounding)),
                                                                                                                shiny::uiOutput("Pop.OSDynam"),
-                                                                                                               shiny::uiOutput("Time.OSDynam"),width=4),
+                                                                                                               shiny::uiOutput("Time.OSDynam"),
+                                                                                                               shiny::p("It is possible to find the sample size for your trial that will give the maximum value for money.
+                                                                                                                        In some cases this optimal sample size will be less than 0. In these cases, the EVSI indicates that the trial
+                                                                                                                        is not cost-effective and the ",shiny::em("Expected Net Benefit of Sampling"),"(ENBS) is less than 0."),
+                                                                                                               shiny::p("Note that the optimal sample size can only be found between",min(evsi$attrib$N),"and",max(evsi$attrib$N),
+                                                                                                                        "as these are the boundaries within which the EVSI has been calculated. If the optimal sample size is given
+                                                                                                                        as either of these values you will need to recalculate the EVSI for alternative values of N to find the true
+                                                                                                                        optimal sample size."),
+                                                                                                               shiny::p("Finally, the plot of the ENBS may demonstrate that there are large number of sample sizes for which
+                                                                                                                        the ENBS is close to the optimal - any of these samples will give a similar level of benefit.")
+                                                                                                               ,width=4),
                                                                                       
-                                                                                             shiny::mainPanel(shiny::fluidRow(shiny::p("It is possible to find the sample size for your trial that will give the maximum value for money.
-                                                                                                           While it is possible to find this value for all trials, there is no guarantee that this optimal sample
-                                                                                                           size will yield a positive benefit from the sampling. In these cases, the EVSI indicates that the trial
-                                                                                                           is not cost-effective and the ",shiny::em("Expected Net Benefit of Sampling"),"(ENBS) is less than 0."),
-                                                                                                                              shiny::p("It is important to note that the optimal sample size can only be found between",
-                                                                                                           min(evsi$attrib$N),"and",max(evsi$attrib$N),"as these are the boundaries within which the EVSI has been
-                                                                                                           calculated. If the optimal sample size is calculated as either of these values it may be preferable to
-                                                                                                           extend the limits of the EVSI calculation to find the optimal sample size."),
-                                                                                                           shiny::p("Finally, note that the
-                                                                                                           ENBS is a relatively \"flat\" function, meaning that, while the optimal sample size does exist, it is
-                                                                                                           likely that sample sizes close to the optimal size will also give a similar benefit.",
-                                                                                                                    shiny::tags$br(),shiny::tags$br())),
-                                                                                                           shiny::fluidRow(shiny::column(5,shiny::p(shiny::h4("Optimal Sample Size: "),shiny::textOutput(outputId="SS"))),
-                                                                                                                           shiny::column(7,shiny::p(shiny::h4("Expected Net Benefit of Sampling: "),shiny::textOutput(outputId="ENBS"))),width=8))
+                                                                                             shiny::mainPanel(shiny::fluidRow(shiny::column(5,shiny::p(shiny::h4("Optimal Sample Size: "),shiny::textOutput(outputId="SS"))),
+                                                                                                                           shiny::column(7,shiny::p(shiny::h4("Expected Net Benefit of Sampling: "),shiny::textOutput(outputId="ENBS"))),
+                                                                                                                           shiny::plotOutput("ENBS.plot",width=width,height=height),width=8))
                                                                                       )
                                                                                       ))
                                                                                     )
@@ -323,7 +322,7 @@ evsi.plot.dynam<-function(evsi,width=600,height=600){
       if(is.null(input$Time.OS)){return(NULL)}
       pp<-as.numeric(c(input$PerPersmin,input$PerPersmax))
       setup<-as.numeric(c(input$Setupmin,input$Setupmax))
-      suppressWarnings(optim.ss(evsi,setup,pp,input$Pop.OS,input$Time.OS,wtp=as.numeric(input$wtp.OS))$SS.max)
+      suppressWarnings(optim.ss(evsi,setup,pp,input$Pop.OS,input$Time.OS,Dis=input$Dis,wtp=as.numeric(input$wtp.OS))$SS.max)
     }
     )
     
@@ -332,10 +331,19 @@ evsi.plot.dynam<-function(evsi,width=600,height=600){
       if(is.null(input$Time.OS)){return(NULL)}
       pp<-as.numeric(c(input$PerPersmin,input$PerPersmax))
       setup<-as.numeric(c(input$Setupmin,input$Setupmax))
-      round(suppressWarnings(optim.ss(evsi,setup,pp,as.numeric(input$Pop.OS),as.numeric(input$Time.OS),
+      round(suppressWarnings(optim.ss(evsi,setup,pp,as.numeric(input$Pop.OS),as.numeric(input$Time.OS),Dis=input$Dis,
                                       wtp=as.numeric(input$wtp.OS))$ENBS),-1)
     })
     
+    output$ENBS.plot<-shiny::renderPlot({
+      if(is.null(input$Pop.OS)){return(NULL)}
+      if(is.null(input$Time.OS)){return(NULL)}
+      pp<-as.numeric(c(input$PerPersmin,input$PerPersmax))
+      setup<-as.numeric(c(input$Setupmin,input$Setupmax))
+      
+      enbs.plot(evsi,setup,pp,Pop=as.numeric(input$Pop.OS),Time=as.numeric(input$Time.OS),
+                Dis=input$Dis,wtp=as.numeric(input$wtp.OS))
+    })
     
     
   }
