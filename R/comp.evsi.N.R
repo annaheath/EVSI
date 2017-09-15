@@ -457,7 +457,7 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
                    sigma.tau=1/sd(y),
                    N=length(N.samp),
                    shape.Nmax=0.0005/max(N.samp),
-                   var.PI=var(fitted.wtp)[i,j],
+                   var.PI=var.INB[i,j],
                    Nmax=max(N.samp),
                    y=as.vector(y),
                    x=as.vector(N.samp)
