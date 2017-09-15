@@ -40,31 +40,31 @@ evsi<-function(model.stats,data,effects=NULL,costs=NULL,he=NULL,evi=NULL,paramet
     warning(paste("The number of simulations for the future data does not equal the specified number of MC simulations
                   - the number of similations will be updated to",length(data),"."))
     Q<-length(data)
-    
+
   }
-  
+
   #Set the functions for costs and effects
   if(class(costs)!="function"){
     costs<-function(costs){
       return(costs)
     }
   }
-  
+
   if(class(effects)!="function"){
     effects<-function(effects){
       return(effects)
     }
   }
-  
+
   #Extract the arguements of the effects and costs functions
   nameofinterest<-unique(c(names(formals(effects)),names(formals(costs))))
-  
+
   #Check which of these parameters are also in the model file
   #grep reads the model file finds the occurance of a string.
   grep.fun<-function(name,main){
     length(grep(name, main, value = FALSE))
   }
-  
+
   #Set the function arguements for the model functions
   find.args<-function(func,sample,i){
     #Find the names of all the function arguements
@@ -74,10 +74,10 @@ evsi<-function(model.stats,data,effects=NULL,costs=NULL,he=NULL,evi=NULL,paramet
     #The variable a vector - i.e. it only appears once in the jags output
     jags.params<-which(sapply(moniter,grep.fun,main=names(sample))==1)
     inputs<-sample[,moniter[jags.params]]
-    
+
     #Matrix Parameters
     multiple.params<-moniter[-jags.params]
-    
+
     #Function to extract the matrix parameters from the jags object
     multiple.params.extract<-function(multi.params){
       if(length(multi.params)==0){return(NULL)}
@@ -89,7 +89,7 @@ evsi<-function(model.stats,data,effects=NULL,costs=NULL,he=NULL,evi=NULL,paramet
         }
         return(list.params)}
     }
-    
+
     #Sets the effects function arguements for the single parameters
     formals(func)[which(args.names %in% names(inputs))]<-
       inputs[i,which(names(inputs) %in% args.names)]
@@ -98,7 +98,7 @@ evsi<-function(model.stats,data,effects=NULL,costs=NULL,he=NULL,evi=NULL,paramet
       multiple.params.extract(args.names[which(args.names %in% multiple.params)])
     return(formals(func))
   }
-  
+
   #Generate future samples by finding prior-predictive distribution
   if(update=="jags"){ #Model can be written in jags.
     # Checks if rjags is installed (and if not, asks for it)
@@ -108,13 +108,13 @@ evsi<-function(model.stats,data,effects=NULL,costs=NULL,he=NULL,evi=NULL,paramet
     }
     #Defines the model parameters that are required to calculate the costs and effects
     moniter<-names(which(sapply(nameofinterest,grep.fun,main=readLines(model.stats))>0))
-    
+
     #Track all the variables of interest
     prior.pred.data<-unique(moniter)
     #Track both the data and the parameters of interest if either are needed.
     if(cl.dat=="character"){prior.pred.data <-unique(c(prior.pred.data,data))}
     if(length(parameters)!=0){prior.pred.data<-unique(c(prior.pred.data,parameters))}
-    
+
     if((cl.dat=="character")|(class(he)!="bcea")|(class(evi)!="evppi")){
       #Runs the jags model based on the rjags package
       Model.JAGS<- rjags::jags.model(model.stats,data=data.stats,quiet=TRUE)
@@ -122,21 +122,21 @@ evsi<-function(model.stats,data,effects=NULL,costs=NULL,he=NULL,evi=NULL,paramet
       Prior.Pred <- rjags::coda.samples(Model.JAGS, prior.pred.data, n.iter=n.iter,n.thin=n.thin,progress.bar="none")
       PP.sample<-as.data.frame(Prior.Pred[[1]])
     }
-    
+
     if(cl.dat=="character"){
       #Determine which columns contain the data
       index.data<-list()
       for(l in 1:length(data)){
         index.data[[l]]<-grep(data[l],colnames(PP.sample))
       }
-      
+
       #Finds the quadrature points and restructures the data
       Ord<-order(PP.sample[,unlist(index.data)[1]])
       Quad<-trunc(sample((1:Q)/(Q+1),replace=F)*length(Ord))
       #ordered contains the future data samples that will be used for the quadrature
       ordered<-as.matrix(PP.sample[Ord[Quad],])
     }
-    
+
     if(class(he)!="bcea"){
       # Checks if BCEA is installed (and if not, asks for it)
       if(!isTRUE(requireNamespace("BCEA",quietly=TRUE))) {
@@ -162,9 +162,9 @@ evsi<-function(model.stats,data,effects=NULL,costs=NULL,he=NULL,evi=NULL,paramet
       he<-BCEA::bcea(e,c)
     }
     #Check number of interventions
-    if(he$n.comparisons>1){stop("WARNING:This EVSI calculation method is currently not implemented for
-                                multi-decision problems")}
-    
+    #if(he$n.comparisons>1){stop("WARNING:This EVSI calculation method is currently not implemented for
+    #                            multi-decision problems")}
+
     if(class(evi)!="evppi"){
       if(!isTRUE(requireNamespace("BCEA",quietly=TRUE))) {
         stop("You need to install the R package 'BCEA'. Please run in your R terminal:\n install.packages('BCEA')")
@@ -174,11 +174,11 @@ evsi<-function(model.stats,data,effects=NULL,costs=NULL,he=NULL,evi=NULL,paramet
       #for(l in 1:length(data)){
       #  lines.imp[[l]]<-grep(data[l],readLines(model.stats))
       #}
-      
+
       #Determine which parameters are related to the data in those rows.
       #lines.import<-readLines(model.stats)[unique(unlist(lines.imp))]
       #params.pi<-names(which(sapply(unique(nameofinterest),grep.fun,main=lines.import)>0))
-      
+
       #Find the columns that contain these parameters
       index<-list()
       for(l in 1:length(parameters)){
@@ -188,19 +188,19 @@ evsi<-function(model.stats,data,effects=NULL,costs=NULL,he=NULL,evi=NULL,paramet
       #PSA.mat<-as.matrix(PP.sample[,unlist(index)])
       evi<-BCEA::evppi(of.interest,PP.sample,he)
     }
-    
-    
+
+
     ####Calculate EVSI by Quadrature####
     var.prepost<-list()
     start<-Sys.time()
-    
+
     #foreach(q=1:Q,.packages="rjags",.export=ls(.GlobalEnv)) %do% {
     for(q in 1:Q){
-      
+
       if(exists("ordered",mode = "numeric")){#Creating list of the future data to give to jags
         length.data<-dim(ordered)[2]
         names.data<-data#colnames(ordered)
-        
+
         Data.Fut<-list()
         for(d in 1:length(index.data)){
           Data.Fut[[d]]<-as.numeric(ordered[q,index.data[[d]]])
@@ -210,7 +210,7 @@ evsi<-function(model.stats,data,effects=NULL,costs=NULL,he=NULL,evi=NULL,paramet
       if(cl.dat=="list"){
         Data.Fut<-data[[q]]
       }
-      
+
       #Both data sets must be given to jags
       data.full<-append(Data.Fut,data.stats)
 
@@ -219,10 +219,10 @@ evsi<-function(model.stats,data,effects=NULL,costs=NULL,he=NULL,evi=NULL,paramet
       samples <- rjags::coda.samples(Model.JAGS, moniter, n.iter=n.iter,n.thin=n.thin,n.chain=1,progress.bar="none")
       #Create a dataframe containing all the JAGS samples
       sample<-as.data.frame(samples[[1]])
-      
+
       #Use the JAGS output as inputs for the effects and costs functions
       int<-matrix(NA,nrow=dim(sample)[1],ncol=2*he$n.comparisons)
-      
+
       #Calculate costs and effects for all simulations
       #int<-foreach(i=1:dim(sample)[1],.combine="rbind") %do% {
       for(i in 1:dim(sample)[1]){
@@ -246,7 +246,7 @@ evsi<-function(model.stats,data,effects=NULL,costs=NULL,he=NULL,evi=NULL,paramet
       var.prepost[[q]]<-var(int)
     }
   }
-  
+
   #Analysis in BUGS
   if(update=="bugs"){#Model can be written in BUGS.
     # Checks if R2OpenBUGS is installed (and if not, asks for it)
@@ -256,35 +256,35 @@ evsi<-function(model.stats,data,effects=NULL,costs=NULL,he=NULL,evi=NULL,paramet
     }
     #Defines the model parameters that are required to calculate the costs and effects
     moniter<-names(which(sapply(nameofinterest,grep.fun,main=readLines(model.stats))>0))
-    
+
     #Track all the variables of interest
     prior.pred.data<-unique(moniter)
     #Track both the data and the parameters of interest if either are needed.
     if(cl.dat=="character"){prior.pred.data <-unique(c(prior.pred.data,data))}
     if(length(parameters)!=0){prior.pred.data<-unique(c(prior.pred.data,parameters))}
-    
+
     if((cl.dat=="character")|(class(he)!="bcea")|(class(evi)!="evppi")){
       #Runs the BUGS model based on the R2OpenBUGS package
       Model.BUGS<- R2OpenBUGS::bugs(data.stats,inits=NULL,parameters.to.save=prior.pred.data,
                         model.file=model.stats, n.burnin=n.burnin,n.iter=n.iter+n.burnin,n.thin=n.thin,n.chain=1,
                         DIC=FALSE,debug=FALSE)
       PP.sample<-as.data.frame(Model.BUGS$sims.matrix)}
-    
-    
+
+
     if(cl.dat=="character"){
       #Determine which columns contain the data
       index.data<-list()
       for(l in 1:length(data)){
         index.data[[l]]<-grep(data[l],colnames(PP.sample))
       }
-      
+
       #Finds the quadrature points and restructures the data
       Ord<-order(PP.sample[,unlist(index.data)[1]])
       Quad<-trunc(sample((1:Q)/(Q+1),replace=F)*length(Ord))
       #ordered contains the future data samples that will be used for the quadrature
       ordered<-as.matrix(PP.sample[Ord[Quad],])
     }
-    
+
     if(class(he)!="bcea"){
       if(!isTRUE(requireNamespace("BCEA",quietly=TRUE))) {
         stop("You need to install the R package 'BCEA'. Please run in your R terminal:\n install.packages('BCEA')")
@@ -309,9 +309,9 @@ evsi<-function(model.stats,data,effects=NULL,costs=NULL,he=NULL,evi=NULL,paramet
       he<-BCEA::bcea(e,c)
     }
     #Check number of interventions
-    if(he$n.comparisons>1){stop("WARNING:This EVSI calculation method is currently not implemented for
-                                multi-decision problems")}
-    
+    #if(he$n.comparisons>1){stop("WARNING:This EVSI calculation method is currently not implemented for
+     #                           multi-decision problems")}
+
     if(class(evi)!="evppi"){
       if(!isTRUE(requireNamespace("BCEA",quietly=TRUE))) {
         stop("You need to install the R package 'BCEA'. Please run in your R terminal:\n install.packages('BCEA')")
@@ -321,11 +321,11 @@ evsi<-function(model.stats,data,effects=NULL,costs=NULL,he=NULL,evi=NULL,paramet
       #for(l in 1:length(data)){
       #  lines.imp[[l]]<-grep(data[l],readLines(model.stats))
       #}
-      
+
       #Determine which parameters are related to the data in those rows.
       #lines.import<-readLines(model.stats)[unique(unlist(lines.imp))]
       #params.pi<-names(which(sapply(unique(nameofinterest),grep.fun,main=lines.import)>0))
-      
+
       #Find the columns that contain these parameters
       index<-list()
       for(l in 1:length(parameters)){
@@ -335,20 +335,20 @@ evsi<-function(model.stats,data,effects=NULL,costs=NULL,he=NULL,evi=NULL,paramet
       #PSA.mat<-as.matrix(PP.sample[,unlist(index)])
       evi<-BCEA::evppi(of.interest,PP.sample,he)
     }
-    
-    
-    
+
+
+
     ####Calculate EVSI by Quadrature####
     var.prepost<-list()
     start<-Sys.time()
-    
+
     #foreach(q=1:Q,.packages="R2OpenBugs",.export=ls(.GlobalEnv)) %do% {
     for(q in 1:Q){
-      
+
       if(exists("ordered",mode = "numeric")){#Creating list of the future data to give to jags
         length.data<-dim(ordered)[2]
         names.data<-data#colnames(ordered)
-        
+
         Data.Fut<-list()
         for(d in 1:length(index.data)){
           Data.Fut[[d]]<-as.numeric(ordered[q,index.data[[d]]])
@@ -358,19 +358,19 @@ evsi<-function(model.stats,data,effects=NULL,costs=NULL,he=NULL,evi=NULL,paramet
       if(cl.dat=="list"){
         Data.Fut<-data[[q]]
       }
-      
+
       #Both data sets must be given to jags
       data.full<-append(Data.Fut,data.stats)
-      
+
       Model.BUGS<- R2OpenBUGS::bugs(data.full,inits=NULL,parameters.to.save=moniter,
                         model.file=model.stats, n.burnin=n.burnin,n.iter=n.iter+n.burnin,n.thin=n.thin,n.chains=1,
                         DIC=FALSE,debug=FALSE)
       #Create a dataframe containing all the BUGS samples
       sample<-as.data.frame(Model.BUGS$sims.matrix)
-      
+
       #Use the BUGS output as inputs for the effects and costs functions
       int<-matrix(NA,nrow=dim(sample)[1],ncol=2*he$n.comparisons)
-      
+
       #Calculate costs and effects for all simulations
       for(i in 1:dim(sample)[1]){
         #Set function arguements
@@ -393,21 +393,43 @@ evsi<-function(model.stats,data,effects=NULL,costs=NULL,he=NULL,evi=NULL,paramet
       var.prepost[[q]]<-var(int)
     }
   }
-  
+
+  CreateCov<-function(cov,i,j,d,k){
+    cov.i.j<-k^2*cov[i,j]-k*(cov[i,d+j]+cov[d+i,j])+cov[d+i,d+j]
+    return(cov.i.j)
+  }
+
   #Calcualte the EVSI accross different WTP
   mean.var<-apply(simplify2array(var.prepost),1:2,mean)
   EVSI<-array(NA,dim=c(1,length(he$k),1))
+  INB.full<-array(he$ib,c(length(he$k),he$n.sim,he$n.comparisons))
   k.<-1
   #EVSI[,1:length(he$k),]<-foreach(k=he$k,.combine="c") %do% {
   for(k in he$k){
-    #Fitted INB for each k
-    INB<-k*evi$fitted.effects[,1]-evi$fitted.costs[,1]
+    #Fitted INB for each k - the fitted INB is negative because of how the evppi function works, CAN I REMEMBER WHY??
+    INB<-(-as.matrix(k*evi$fitted.effects[,-he$n.comparators]-evi$fitted.costs[,-he$n.comparators]))
+    #Variance of the fitted INB
+    var.INB<-as.matrix(var(INB))
+    #Variance of the full INB
+    var.full<-as.matrix(var(INB.full[k.,,]))
     #Mean preposterior variance for each k
-    Var<-k^2*mean.var[1,1]+mean.var[2,2]-2*k*mean.var[1,2]
+    Var<-matrix(NA, nrow=he$n.comparisons,ncol=he$n.comparisons)
+    for(i in 1:he$n.comparisons){
+      for(j in 1:i)
+        Var[i,j]<-Var[j,i]<-CreateCov(mean.var,i,j,he$n.comparisons,k)
+    }
+    #Var<-k^2*mean.var[1,1]+mean.var[2,2]-2*k*mean.var[1,2]
+    #Ensure that the preposterior variance is a positive definite matrix - to avoid simulation error.
+    if(he$n.comparisons==1){pre.post.var<-max(0,var.full-Var)
+    INB.star<-(INB-mean(INB))/sd(INB)*sqrt(pre.post.var)+mean(INB)}
+    if(he$n.comparisons>1){pre.post.var<-var.full-Var
+    check<-base::eigen(pre.post.var)
+    pre.post.var<-check$vectors%*%diag(pmax(0,check$values))%*%solve(check$vectors)
     #Rescale fitted INB
-    INB.star<-(INB-mean(INB))/sd(INB)*sqrt(max(0,var(he$ib[k.,])-Var))+mean(INB)
+    INB.star<-  sweep(as.matrix(sweep(INB,2,base::colMeans(INB)))%*%solve(expm::sqrtm(var.INB))%*%
+                        base::Re(expm::sqrtm(pre.post.var)),2,base::colMeans(INB),"+")}
     #Calculate EVSI
-    EVSI[,k.,]<-mean(pmax(INB.star,0))-max(mean(INB.star),0)
+    EVSI[,k.,]<-mean(apply(cbind(INB.star,0),1,max))-max(apply(cbind(INB.star,0),2,mean))
     k.<-k.+1
   }
   #Return EVSI, plus evppi object and bcea object to plot EVSI plus attrib which fits in with later objects..
@@ -418,3 +440,4 @@ evsi<-function(model.stats,data,effects=NULL,costs=NULL,he=NULL,evi=NULL,paramet
   class(to.return)<-"evsi"
   return(to.return)
 }
+

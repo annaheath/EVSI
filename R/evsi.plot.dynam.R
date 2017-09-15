@@ -17,10 +17,14 @@ evsi.plot.dynam<-function(evsi,width=600,height=600){
   if(!isTRUE(requireNamespace("shinythemes",quietly=TRUE))) {
     stop("You need to install the R package 'shiny'.Please run in your R terminal:\n install.packages('shinythemes')")
   }
-  
+
   digits<-nchar(as.character(round(diff(evsi$attrib$wtp))))[1]
   if(is.na(digits)){rounding<-0}
   else{rounding<-1-digits}
+
+  #if(class(evsi$attrib$N)!="numeric"){
+  #  evsi$attrib$N<-0
+  #}
   ui<-shiny::fluidPage(theme=shinythemes::shinytheme('united'),
                        shiny::titlePanel(shiny::h1("Visualisations for the EVSI")),
                        shiny::mainPanel(
@@ -69,7 +73,7 @@ evsi.plot.dynam<-function(evsi,width=600,height=600){
                                                       for alternative time horizons. This is powerful as it is rarely known the length of time a technology will
                                                       be available in the market.")))
                                                     ),
-                           
+
                            #Per person EVSI by Willingness to Pay - n slider
                            shiny::tabPanel("EVSI by Willingness To Pay",
                                            shiny::sidebarPanel(shiny::p("The EVSI changes depending on the willingness-to-pay of the underlying decision maker and therefore
@@ -96,9 +100,9 @@ evsi.plot.dynam<-function(evsi,width=600,height=600){
                                                                      shiny::a("Bayesian Cost-Effectiveness Analysis with the R package BCEA",href="http://www.springer.com/gb/book/9783319557168"),
                                                                      shiny::em(", Springer"),", 2017"),width=8)
                                                  ),
-                           
+
                            #Per person EVSI by N - wtp slider
-                           
+
                            shiny::tabPanel("EVSI by Sample Size",
                                            shiny::sidebarPanel(shiny::p("The EVSI increases as the sample size of the underlying trial increases. This graphic shows the
                                                    EVSI across different sample sizes. This relationship with N changes depending on the value of the
@@ -109,13 +113,13 @@ evsi.plot.dynam<-function(evsi,width=600,height=600){
                                                    EVSI calculation."),
                                                                shiny::selectInput(inputId="wtp",label="Choose a Willingness-to-Pay Threshold",
                                                              choices=round(evsi$attrib$wtp,rounding),
-                                                             selected=round(evsi$attrib$wtp[which.min((evsi$attrib$wtp-evsi$he$kstar)^2)],rounding)),
+                                                             selected=round(evsi$attrib$wtp[which.min((evsi$attrib$wtp-evsi$he$kstar[1])^2)],rounding)),
                                                  #sliderInput(inputId="wtp",label="Choose a Willingness-to-Pay Threshold",
                                                  #min=min(evsi$attrib$wtp),max=max(evsi$attrib$wtp),value=min(evsi$he$kstar),
                                                  #step=round(evsi$attrib$wtp[2]-evsi$attrib$wtp[1])),
                                                  shiny::p(paste("In general, the EVSI will be more accurately estimated for higher values of the EVSI. This
                                                          would will be for willingness to pay values close to the \"break-even\" point of ",
-                                                         round(evsi$attrib$wtp[which.min((evsi$attrib$wtp-evsi$he$kstar)^2)],rounding),".")),width=4),
+                                                         round(evsi$attrib$wtp[which.min((evsi$attrib$wtp-evsi$he$kstar[1])^2)],rounding),".")),width=4),
                                            shiny::mainPanel(shiny::plotOutput(outputId="ppEVSIbyn",width=width,height=height),
                                                             shiny::p("Citations: Heath, A., Manolopoulou I. and Baio, G., ",
                                                 shiny::a("Efficient Monte Carlo Estimation of the Expected Value of Sample Information using Moment Matching",href="https://arxiv.org/abs/1611.01373"),
@@ -125,10 +129,10 @@ evsi.plot.dynam<-function(evsi,width=600,height=600){
                                                          shiny::em(", Working Paper"),", 2017"),
                                               width=8)
                                     ),
-                           
+
                            #Trial Costs Input
                            shiny::tabPanel("Cost-effectiveness of a Trial",shiny::column(12,
-                                                                                         shiny::tabsetPanel(shiny::tabPanel("Trial Costs",shiny::fluidRow(
+                                                                                         shiny::tabsetPanel(id="CE",shiny::tabPanel("Trial Costs",shiny::fluidRow(
                                                                                            shiny::column(5,
                                                                                                          shiny::fluidRow(shiny::column(12,shiny::p("To determine the cost-effectiveness of a trial, the EVSI must be compared with the costs of
                                                                                                          undertaking the trial. In general, these costs are split into two categories; the setup and the per person costs.
@@ -177,7 +181,7 @@ evsi.plot.dynam<-function(evsi,width=600,height=600){
                                                                                                     choices=evsi$attrib$N,
                                                                                                     selected=evsi$attrib$N[round(length(evsi$attrib$N)/2)]),
                                                                                                     shiny::selectInput(inputId="wtp.CE",label="Choose a Willingness-to-Pay Threshold",
-                                                                                                    choices=round(evsi$attrib$wtp,rounding),selected=round(evsi$attrib$wtp[which.min((evsi$attrib$wtp-evsi$he$kstar)^2)],rounding)),
+                                                                                                    choices=round(evsi$attrib$wtp,rounding),selected=round(evsi$attrib$wtp[which.min((evsi$attrib$wtp-evsi$he$kstar[1])^2)],rounding)),
                                                                                                     shiny::uiOutput("PopDynam"),
                                                                                                     shiny::uiOutput("TimeDynam"),width=4),
                                                                                                     shiny::mainPanel(shiny::plotOutput(outputId="ProbCE",width=width,height=height),
@@ -199,28 +203,29 @@ evsi.plot.dynam<-function(evsi,width=600,height=600){
                                                                                                                                          shiny::em(", Working Paper"),", 2017")))
                                                                                       ),
                                                                              #Optimal Sample Size
-                                                                             shiny::tabPanel("Optimal Sample Size",
+
+                                                                             shiny::tabPanel("Optimal Sample Size",value = "OSS",
                                                                                              shiny::sidebarPanel(shiny::selectInput(inputId="wtp.OS",label="Choose a Willingness-to-Pay Threshold",
                                                                                                                choices=round(evsi$attrib$wtp,rounding),
-                                                                                                               selected=round(evsi$attrib$wtp[which.min((evsi$attrib$wtp-evsi$he$kstar)^2)],rounding)),
+                                                                                                               selected=round(evsi$attrib$wtp[which.min((evsi$attrib$wtp-evsi$he$kstar[1])^2)],rounding)),
                                                                                                                shiny::uiOutput("Pop.OSDynam"),
-                                                                                                               shiny::uiOutput("Time.OSDynam"),width=4),
-                                                                                      
-                                                                                             shiny::mainPanel(shiny::fluidRow(shiny::p("It is possible to find the sample size for your trial that will give the maximum value for money.
-                                                                                                           While it is possible to find this value for all trials, there is no guarantee that this optimal sample
-                                                                                                           size will yield a positive benefit from the sampling. In these cases, the EVSI indicates that the trial
-                                                                                                           is not cost-effective and the ",shiny::em("Expected Net Benefit of Sampling"),"(ENBS) is less than 0."),
-                                                                                                                              shiny::p("It is important to note that the optimal sample size can only be found between",
-                                                                                                           min(evsi$attrib$N),"and",max(evsi$attrib$N),"as these are the boundaries within which the EVSI has been
-                                                                                                           calculated. If the optimal sample size is calculated as either of these values it may be preferable to
-                                                                                                           extend the limits of the EVSI calculation to find the optimal sample size."),
-                                                                                                           shiny::p("Finally, note that the
-                                                                                                           ENBS is a relatively \"flat\" function, meaning that, while the optimal sample size does exist, it is
-                                                                                                           likely that sample sizes close to the optimal size will also give a similar benefit.",
-                                                                                                                    shiny::tags$br(),shiny::tags$br())),
-                                                                                                           shiny::fluidRow(shiny::column(5,shiny::p(shiny::h4("Optimal Sample Size: "),shiny::textOutput(outputId="SS"))),
-                                                                                                                           shiny::column(7,shiny::p(shiny::h4("Expected Net Benefit of Sampling: "),shiny::textOutput(outputId="ENBS"))),width=8))
+                                                                                                               shiny::uiOutput("Time.OSDynam"),
+                                                                                                               shiny::p("It is possible to find the sample size for your trial that will give the maximum value for money.
+                                                                                                                        In some cases this optimal sample size will be less than 0. In these cases, the EVSI indicates that the trial
+                                                                                                                        is not cost-effective and the ",shiny::em("Expected Net Benefit of Sampling"),"(ENBS) is less than 0."),
+                                                                                                               shiny::p("Note that the optimal sample size can only be found between",min(evsi$attrib$N),"and",max(evsi$attrib$N),
+                                                                                                                        "as these are the boundaries within which the EVSI has been calculated. If the optimal sample size is given
+                                                                                                                        as either of these values you will need to recalculate the EVSI for alternative values of N to find the true
+                                                                                                                        optimal sample size."),
+                                                                                                               shiny::p("Finally, the plot of the ENBS may demonstrate that there are large number of sample sizes for which
+                                                                                                                        the ENBS is close to the optimal - any of these samples will give a similar level of benefit.")
+                                                                                                               ,width=4),
+
+                                                                                             shiny::mainPanel(shiny::fluidRow(shiny::column(5,shiny::p(shiny::h4("Optimal Sample Size: "),shiny::textOutput(outputId="SS"))),
+                                                                                                                           shiny::column(7,shiny::p(shiny::h4("Expected Net Benefit of Sampling: "),shiny::textOutput(outputId="ENBS"))),
+                                                                                                                           shiny::plotOutput("ENBS.plot",width=width,height=height),width=8))
                                                                                       )
+
                                                                                       ))
                                                                                     )
                            ),width=12
@@ -231,10 +236,10 @@ evsi.plot.dynam<-function(evsi,width=600,height=600){
     #inputs$n - access the inputs from the sliders ect...
     #Use inputs inside the render functions
     #inputs and outputs should be lists
-    
+
     #render* functions work with the output functions to produce output
     #e.g. renderPlot({hist(rnorm(100))})
-    
+
     #Dynamic Sliders
     output$PopDynam<-shiny::renderUI(shiny::sliderInput(
       inputId = "Pop",label="Incidence Population", max = input$Popmax, min = input$Popmin,value=c(input$Popmin,input$Popmax),step=1
@@ -248,60 +253,65 @@ evsi.plot.dynam<-function(evsi,width=600,height=600){
     output$Time.OSDynam<-shiny::renderUI(shiny::sliderInput(
       inputId = "Time.OS",label="Time Horizon", min = input$Timemin, max = input$Timemax,value=c(input$Timemax),step=0.5
     ))
-    
+
     #Reactive input min<max
     shiny::observeEvent(input$Timemin,{
       value.max<-max(input$Timemin,input$Timemax)
       shiny::updateNumericInput(session,"Timemax",value=value.max)
     })
-    
+
     shiny::observeEvent(input$Timemax,{
       value.min<-min(input$Timemin,input$Timemax)
       shiny::updateNumericInput(session,"Timemin",value=value.min)
     })
-    
+
     shiny::observeEvent(input$Popmin,{
       value.max<-max(input$Popmin,input$Popmax)
       shiny::updateNumericInput(session,"Popmax",value=value.max)
     })
-    
+
     shiny::observeEvent(input$Popmax,{
       value.min<-min(input$Popmin,input$Popmax)
       shiny::updateNumericInput(session,"Popmin",value=value.min)
     })
-    
+
     shiny::observeEvent(input$PerPersmin,{
       value.max<-max(input$PerPersmin,input$PerPersmax)
       shiny::updateNumericInput(session,"PerPersmax",value=value.max)
     })
-    
+
     shiny::observeEvent(input$PerPersmax,{
       value.min<-min(input$PerPersmin,input$PerPersmax)
       shiny::updateNumericInput(session,"PerPersmin",value=value.min)
     })
-    
+
     shiny::observeEvent(input$Setupmin,{
       value.max<-max(input$Setupmin,input$Setupmax)
       shiny::updateNumericInput(session,"Setupmax",value=value.max)
     })
-    
+
     shiny::observeEvent(input$Setupmax,{
       value.min<-min(input$Setupmin,input$Setupmax)
       shiny::updateNumericInput(session,"Setupmin",value=value.min)
     })
-    
+
     #Per person EVSI by Willingness to Pay - n slider
     output$ppEVSIbywtp<-shiny::renderPlot({
+      if(length(evsi$attrib$N)==1){
+        suppressWarnings(plot.evsi(evsi))
+      }
+      if(length(evsi$attrib$N)>1){
       N.chosen<-as.numeric(input$n)
       suppressWarnings(plot.evsi(evsi,N=N.chosen))
+}
     }
     )
-    
+
     #Per person EVSI by N - wtp slider
     output$ppEVSIbyn<-shiny::renderPlot({
       plot.evsi.N(evsi,wtp=as.numeric(input$wtp))
     })
-    
+
     #Probability of Cost Effective Trial plot
     output$ProbCE<-shiny::renderPlot({
       if(is.null(input$Pop)){return(NULL)}
@@ -310,34 +320,57 @@ evsi.plot.dynam<-function(evsi,width=600,height=600){
       Time<-as.numeric(input$Time)
       pp<-as.numeric(c(input$PerPersmin,input$PerPersmax))
       setup<-as.numeric(c(input$Setupmin,input$Setupmax))
-      N.chosen.CE<-evsi$attrib$N[which.min((evsi$attrib$N-as.numeric(input$n.CE))^2)]
-      evsi.pop(evsi,setup=setup,pp=pp,
-               Pop=Pop,Time=Time,Dis=input$Dis,
-               wtp=as.numeric(input$wtp.CE),N=N.chosen.CE)
-      
+      if(length(evsi$attrib$N)==1){
+        evsi.pop(evsi,setup=setup,pp=pp,
+                 Pop=Pop,Time=Time,Dis=input$Dis,
+                 wtp=as.numeric(input$wtp.CE))
+      }
+      if(length(evsi$attrib$N)>1){
+        N.chosen.CE<-evsi$attrib$N[which.min((evsi$attrib$N-as.numeric(input$n.CE))^2)]
+        evsi.pop(evsi,setup=setup,pp=pp,
+                 Pop=Pop,Time=Time,Dis=input$Dis,
+                 wtp=as.numeric(input$wtp.CE),N=N.chosen.CE)
+      }
+
+
+
+
     })
-    
+
     #Optimal Sample Size
     output$SS<-shiny::renderText({
       if(is.null(input$Pop.OS)){return(NULL)}
       if(is.null(input$Time.OS)){return(NULL)}
+      if(length(evsi$attrib$N)==1){return("Only one sample size considered")}
       pp<-as.numeric(c(input$PerPersmin,input$PerPersmax))
       setup<-as.numeric(c(input$Setupmin,input$Setupmax))
-      suppressWarnings(optim.ss(evsi,setup,pp,input$Pop.OS,input$Time.OS,wtp=as.numeric(input$wtp.OS))$SS.max)
+      suppressWarnings(optim.ss(evsi,setup,pp,input$Pop.OS,input$Time.OS,Dis=input$Dis,wtp=as.numeric(input$wtp.OS))$SS.max)
     }
     )
-    
+
     output$ENBS<-shiny::renderText({
       if(is.null(input$Pop.OS)){return(NULL)}
       if(is.null(input$Time.OS)){return(NULL)}
+      if(length(evsi$attrib$N)==1){return(NULL)}
       pp<-as.numeric(c(input$PerPersmin,input$PerPersmax))
       setup<-as.numeric(c(input$Setupmin,input$Setupmax))
-      round(suppressWarnings(optim.ss(evsi,setup,pp,as.numeric(input$Pop.OS),as.numeric(input$Time.OS),
+      round(suppressWarnings(optim.ss(evsi,setup,pp,as.numeric(input$Pop.OS),as.numeric(input$Time.OS),Dis=input$Dis,
                                       wtp=as.numeric(input$wtp.OS))$ENBS),-1)
     })
-    
-    
-    
+
+    output$ENBS.plot<-shiny::renderPlot({
+      if(is.null(input$Pop.OS)){return(NULL)}
+      if(is.null(input$Time.OS)){return(NULL)}
+      if(length(evsi$attrib$N)==1){return(NULL)}
+      pp<-as.numeric(c(input$PerPersmin,input$PerPersmax))
+      setup<-as.numeric(c(input$Setupmin,input$Setupmax))
+
+      enbs.plot(evsi,setup,pp,Pop=as.numeric(input$Pop.OS),Time=as.numeric(input$Time.OS),
+                Dis=input$Dis,wtp=as.numeric(input$wtp.OS))
+    })
+
+
+
   }
   shiny::shinyApp(ui=ui,server=server)
 }
