@@ -62,26 +62,28 @@ evsi.calc<-function(comp.evsi.N,wtp=NULL,N=NULL,CI=NULL){
   beta.quantiles<-apply(comp.evsi.N$beta,c(2,3),quantile,prob=CI)
 
   #Extracting the beta parameter for the wtp of interest
-  beta.focal<-as.matrix(beta.quantiles[,which(comp.evsi.N$wtp%in%wtp),])
+  beta.focal<-beta.quantiles[,which(comp.evsi.N$wtp%in%wtp),]
 
+  if(length(dim(beta.focal))==2){dim(beta.focal)<-c(dim(beta.focal),1)}
   EVSI.mat<-array(NA,dim=c(N.length,wtp.length,CI.length))
-  INB.full<-array(he$ib,c(length(he$k),he$n.sim,he$n.comparisons))
+  INB.full<-array(comp.evsi.N$he$ib,c(length(comp.evsi.N$he$k),comp.evsi.N$he$n.sim,comp.evsi.N$he$n.comparisons))
 
   calc.EVSI<-function(beta.focal,wtp,N){
-    INB.full<--(k*he$delta.e-he$delta.c)
+    INB.full<--(wtp*comp.evsi.N$he$delta.e-comp.evsi.N$he$delta.c)
     var.full<-as.matrix(var(INB.full))
     #Find the fitted values for the wtp
-    fitted.PI<-wtp*comp.evsi.N$evi$fitted.effects[,comp.evsi.N$he$n.comparators]-
-      comp.evsi.N$evi$fitted.costs[,comp.evsi.N$he$n.comparators]
+    INB<--(wtp*comp.evsi.N$evi$fitted.effects[,-comp.evsi.N$he$n.comparators]-
+      comp.evsi.N$evi$fitted.costs[,-comp.evsi.N$he$n.comparators])
+    var.INB<-var(INB)
     #Variance for a specific N and beta
-    var.pre<-var(fitted.PI)*(N/(N+beta.focal))
+    var.pre<-var(INB)*(N/(N+beta.focal))
 
     if(comp.evsi.N$he$n.comparisons==1){
-      pre.post.var<-max(0,var.full-Var)
-      INB.star<-(fitted.PI-mean(fitted.PI))/sd(fitted.PI)*sqrt(pre.post.var)+mean(fitted.PI)
+      pre.post.var<-max(0,var.pre)
+      INB.star<-(INB-mean(INB))/sd(INB)*sqrt(pre.post.var)+mean(INB)
       }
     #Rescaled fitted values
-    if(he$n.comparisons>1){pre.post.var<-var.full-Var
+    if(comp.evsi.N$he$n.comparisons>1){pre.post.var<-var.pre
     check<-base::eigen(pre.post.var)
     pre.post.var<-check$vectors%*%diag(pmax(0,check$values))%*%solve(check$vectors)
     #Rescale fitted INB
@@ -93,10 +95,19 @@ evsi.calc<-function(comp.evsi.N,wtp=NULL,N=NULL,CI=NULL){
   }
 
   ####THINK ABOUT THE STRUCTURE OF THE beta.focal MATRIX...
-  beta.foc<-array(NA,dim=c(comp.evsi.N$he$n.comparisons,comp.evsi.N$he$n.comparisons,wtp.length,CI.length))
+  n.choices<-1
+  index<-matrix(NA,nrow=comp.evsi.N$he$n.comparisons,ncol=comp.evsi.N$he$n.comparisons)
+  for(i in 1:comp.evsi.N$he$n.comparisons){
+    for(j in i:comp.evsi.N$he$n.comparisons){
+      index[i,j]<-index[j,i]<-n.choices
+      n.choices<-n.choices+1
+    }
+  }
+
   for(i in 1:CI.length){
     for(j in 1:wtp.length){
-      EVSI.mat[,j,i]<-sapply(N,calc.EVSI,beta.focal=beta.focal[i,j],wtp=wtp[j])
+      beta.of.interest<-matrix(beta.focal[i,j,index],nrow=comp.evsi.N$he$n.comparisons,ncol=comp.evsi.N$he$n.comparisons)
+      EVSI.mat[,j,i]<-sapply(N,calc.EVSI,beta.focal=beta.of.interest,wtp=wtp[j])
     }
   }
   to.return<-list(evsi=EVSI.mat,
