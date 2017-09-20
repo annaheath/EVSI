@@ -136,9 +136,11 @@ enbs.plot<-function(evsi,setup,pp,prob=NULL,
     lwd<-c(1:(length.prob/2),(length.prob/2):1,1)
     lty<-c((length.prob/2):1,2:(length.prob/2),1)
   }
+  plot.new()
 
-  plot(rep(N,length.prob),ENBS.mat,col="white",xlab="Sample Size",
-       ylab="Expected Net Benefit of Sampling",oma=c(0,0,-1,0))
+  plot.window(xlim=c(min(N),max(N)),ylim=c(min(ENBS.mat),max(ENBS.mat)))
+  title(main="Expected Net Benefit of Sampling by Sample Size",xlab="Sample Size",ylab="ENBS")
+  axis(side=2)
 
   if(length.N<15){
     for(l in 1:length.prob){
@@ -161,11 +163,14 @@ enbs.plot<-function(evsi,setup,pp,prob=NULL,
          box.lwd = 0,box.col = "white",bg = "white")
   box()
   optimal<-optim.ss(evsi,setup,pp,Pop,Time,wtp=wtp,Dis=Dis)
+  axis(side=1)#,at=c(optimal$SS.I,optimal$SS.max,min(N),max(N)))
 
-  points(optimal$SS.max,optimal$ENBS,pch=4,lwd=2,cex=1.2,col="red2")
-  points(optimal$SS.I,optimal$ENBS.I,pch="|",col="red2",cex=1.2,lty=3)
+  a<-0.04
+  poi<-(1+a)*min(ENBS.mat)-a*max(ENBS.mat)
+  points(c(optimal$SS.I),c(poi,poi),type="l",col="red",lwd=3)
+  points(c(optimal$SS.max),min(poi),pch=9,col="red",lwd=3)
+  #points(c(optimal$SS.I),c(min(ENBS.mat),min(ENBS.mat)),type="l",col="red",lwd=3)
+  #points(c(optimal$SS.max),min(ENBS.mat),pch=9,col="red",lwd=3)
 
 }
-
-
 
