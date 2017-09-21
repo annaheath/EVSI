@@ -85,16 +85,22 @@ evsi.calc<-function(comp.evsi.N,wtp=NULL,N=NULL,CI=NULL){
     #Rescaled fitted values
     if(comp.evsi.N$he$n.comparisons>1){pre.post.var<-var.pre
     check<-base::eigen(pre.post.var)
-    pre.post.var<-check$vectors%*%diag(pmax(0,check$values))%*%solve(check$vectors)
+    #Defintion SQRT from https://stat.ethz.ch/pipermail/r-help/2007-January/124147.html
+    pre.post.var.sqrt<-check$vectors%*%diag(sqrt(pmax(0,check$values)))%*%t(check$vectors)
+    INB.mean<-matrix(rep(base::colMeans(INB),comp.evsi.N$he$n.sim),nrow=comp.evsi.N$he$n.sim,byrow=TRUE)
+
+    #Fast matrix square root inverse
+    decom<-eigen(var.INB)
+    var.INB.sqrt.inv<-chol2inv(chol(decom$vectors%*%diag(sqrt(decom$values))%*%t(decom$vectors)))
+
     #Rescale fitted INB
-    INB.star<-  sweep(as.matrix(sweep(INB,2,base::colMeans(INB)))%*%solve(expm::sqrtm(var.INB))%*%
-                        base::Re(expm::sqrtm(pre.post.var)),2,base::colMeans(INB),"+")}
+    INB.star<-  (INB-INB.mean)%*%var.INB.sqrt.inv%*%
+                       pre.post.var.sqrt+INB.mean}
     #Calculate EVSI
     EVSI<-mean(apply(cbind(INB.star,0),1,max))-max(apply(cbind(INB.star,0),2,mean))
     return(EVSI)
   }
 
-  ####THINK ABOUT THE STRUCTURE OF THE beta.focal MATRIX...
   n.choices<-1
   index<-matrix(NA,nrow=comp.evsi.N$he$n.comparisons,ncol=comp.evsi.N$he$n.comparisons)
   for(i in 1:comp.evsi.N$he$n.comparisons){

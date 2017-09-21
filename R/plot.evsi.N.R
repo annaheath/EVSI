@@ -67,7 +67,7 @@ plot.evsi.N<-function(evsi,wtp=NULL,pos=c("bottomright"),CI=NULL){
 
   #Set up the plot
   plot(1,1,ylim=c(min(EVSI)*0.95,max(EVSI)*1.05),xlim=c(min(evsi$attrib$N),max(evsi$attrib$N)),
-       col="white",xlab=expression("Sample Size"),ylab="Per Person EVSI",oma=c(0,0,-1,0))
+       col="white",xlab=expression("Sample Size"),ylab="Per Person EVSI",oma=c(0,0,-1,0),main="Expected Value of Sample Information across Sample Size")
 
   if(CI.length%%2==1){
     lwd<-c(1:ceiling(CI.length/2),(ceiling(CI.length/2)-1):1,1)

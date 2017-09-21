@@ -24,9 +24,14 @@ uncertainty in these costs.}
 \item{Dis}{The Discount rate (default at 0.035)}
 }
 \value{
-SS The optimal sample size.
+SS.max The optimal sample size.
 
-SS.CI Credible intervals for the optimal sample size. TO BE IMPLEMENTED
+ENBS The Expected Net Benefit of Sampling at the optimal sample size
+
+SS.I The interval for which the ENBS is within 5% of the maximum ENBS
+
+ENBS.I The ENBS values which correspond to 5% of the maximum ENBS - 
+  used for plotting purposes.
 }
 \description{
 Calculates the optimal sample size for the future trial.

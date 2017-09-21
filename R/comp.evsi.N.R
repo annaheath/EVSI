@@ -153,7 +153,7 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
         Data.Fut<-array()
         for(d in 1:length.data){
           #Creating list of the future data to give to jags
-          Data.Fut[unlist(index.data)[d]]<-as.numeric(quantile(PP.sample[,unlist(index.data)[d]],probs=quantiles[q]))
+          Data.Fut[unlist(index.data)[d]]<-as.numeric(quantile(PP.sample[,unlist(index.data)[d]],probs=quantiles[q],type=3))
         }
         Data.Fut.list<-list()
         for(d in 1:length(index.data)){
@@ -255,7 +255,99 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
                   sep="",collapse = ""))
       }
       print(paste("Update",q,"completed"))
+    }
+    #Calcualte the EVSI accross different WTP
+    print("Using curve fitting to find EVSI for alternative sample sizes")
+    wtp.seq<-seq(min(he$k),max(he$k),length.out=length.wtp)
+    ##### GB: Need to define the variables var.PI and x, or else when compiling the package R will throw a message for no-bindings
+    var.PI=x=NULL
+    #####
+    #Write the Model - remove need for R2OpenBUGS so can run with just JAGS.
+    model.ab<-c("model
+                {
+                beta ~ dnorm(Nmax/2, shape.Nmax)  T(0.00000E+00, )
+                for (i in 1:N) {
+                y[i] ~ dnorm(mu[i], tau)
+                mu[i] <- var.PI * (x[i]/(x[i] + beta))
+                }
+                sigma ~ dt(sigma.mu, sigma.tau, 3)  T(0.00000E+00, )
+                tau <- 1/sigma^2
+                }
+                ")
+    file.curve.fitting <- file.path("~",fileext="model_curve_fitting_EVSI.txt")
+    writeLines(model.ab,file.curve.fitting)
+
+
+    CreateCov<-function(cov,i,j,d,k){
+      cov.i.j<-k^2*cov[i,j]-k*(cov[i,d+j]+cov[d+i,j])+cov[d+i,d+j]
+      return(cov.i.j)
+    }
+
+    n.unique.entries<-he$n.comparisons+choose(he$n.comparisons,2)
+    beta.mat<-array(NA,dim=c(3000,length(wtp.seq),n.unique.entries))
+    k.<-1
+    start<-Sys.time()
+    #for k over the wtp dimension
+    for(k in wtp.seq){
+      #WTP level calculations
+      fitted.wtp<--(k*evi$fitted.effects[,-he$n.comparators]-evi$fitted.costs[,-he$n.comparators])
+      #IS THIS DEFINTIELY THE RIGHT INB.full?? Careful with the different ks...he$k and wtp...
+      INB.full<--(k*he$delta.e-he$delta.c)
+      #Variance of the fitted INB
+      var.INB<-as.matrix(var(fitted.wtp))
+      #Variance of the full INB
+      var.full<-as.matrix(var(INB.full))
+
+      n.entry<-1
+      for(i in 1:he$n.comparisons){
+        for(j in i:he$n.comparisons){
+          Var.X.prob<-sapply(var.prepost,CreateCov,i=i,j=j,d=he$n.comparisons,k=k)
+
+          y<-t(var.full[i,j]-Var.X.prob)
+
+          data.a.b<-list(sigma.mu=sd(y)/2,
+                         sigma.tau=1/sd(y),
+                         N=length(N.samp),
+                         shape.Nmax=0.0005/max(N.samp),
+                         var.PI=var.INB[i,j],
+                         Nmax=max(N.samp),
+                         y=as.vector(y),
+                         x=as.vector(N.samp)
+          )
+
+          ####### GB: Should these parameters be modifiable???
+          n.burnin <- 1000  # Number of burn in iterations
+          n.thin<-1
+          n.iter <- 3000 # Number of iterations per chain
+          #######
+
+          # Perform the MCMC simulation with JAGS.
+          ####### GB: But what if the user doesn't have JAGS and only has BUGS?
+          ####### Or do  we *need* them to have JAGS?
+          #Runs the jags model based on the rjags package
+          # Checks if rjags is installed (and if not, asks for it)
+          if(!isTRUE(requireNamespace("rjags",quietly=TRUE))) {
+            stop("You need to install the R package 'rjags' and the software 'JAGS'. \nPlease see http://mcmc-jags.sourceforge.net/ for instructions
+                 on installing 'JAGS' and then run in your R terminal:\n install.packages('rjags')")
+          }
+          Model.JAGS<- rjags::jags.model(file.curve.fitting,data=data.a.b,quiet=TRUE)
+          update(Model.JAGS,n.burnin,progress.bar="none")
+          beta.ab <- rjags::coda.samples(Model.JAGS, c("beta"), n.iter=n.iter,n.thin=n.thin,progress.bar="none")
+
+          beta.mat[,k.,n.entry]<-as.data.frame(beta.ab[[1]])[,1]
+          n.entry<-n.entry+1
+          }
       }
+
+      if(k.==1){end<-Sys.time()
+      comp.time<-end-start
+      print(paste(c("Curve fitting updating requires ",round(comp.time,2)," seconds. There are ",length.wtp," willingness-to-pay values to consider.
+                    The remaining computation time is around ",round(comp.time*(length.wtp-1)/60,0)," minutes. The current time is ",strftime(Sys.time())),
+                  sep="",collapse = ""))
+      }
+      print(paste("Update",k.,"completed"))
+      k.<-k.+1
+    }
   }
 
   #Analysis in BUGS
@@ -283,7 +375,7 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
 
       if((cl.dat=="character")|(class(he)!="bcea")|(class(evi)!="evppi")){
         #Runs the BUGS model based on the R2OpenBUGS package
-        Model.BUGS<- R2OpenBUGS::bugs(data.stats,inits=NULL,parameters.to.save=append(prior.pred.data,Samp.Size),
+        Model.BUGS<- R2OpenBUGS::bugs(append(data.stats,Samp.Size),inits=NULL,parameters.to.save=prior.pred.data,
                           model.file=model.stats, n.burnin=n.burnin,n.iter=n.iter+n.burnin,n.thin=n.thin,n.chain=1,
                           DIC=FALSE,debug=FALSE)
         PP.sample<-as.data.frame(Model.BUGS$sims.matrix)
@@ -301,7 +393,7 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
         Data.Fut<-array()
         for(d in 1:length.data){
           #Creating list of the future data to give to jags
-          Data.Fut[unlist(index.data)[d]]<-as.numeric(quantile(PP.sample[,unlist(index.data)[d]],probs=quantiles[q]))
+          Data.Fut[unlist(index.data)[d]]<-as.numeric(quantile(PP.sample[,unlist(index.data)[d]],probs=quantiles[q],type=3))
         }
         Data.Fut.list<-list()
         for(d in 1:length(index.data)){
@@ -402,100 +494,95 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
       }
       print(paste("Update",q,"completed"))
     }
-  }
+    #Calcualte the EVSI accross different WTP
+    print("Using curve fitting to find EVSI for alternative sample sizes")
+    wtp.seq<-seq(min(he$k),max(he$k),length.out=length.wtp)
+    ##### GB: Need to define the variables var.PI and x, or else when compiling the package R will throw a message for no-bindings
+    var.PI=x=NULL
+    #####
+    #Write the Model - remove need for R2OpenBUGS so can run with just JAGS.
+    model.ab<-c("model
+                {
+                beta ~ dnorm(Nmax, shape.Nmax)  I(0.00000E+00, )
+                for (i in 1:N) {
+                y[i] ~ dnorm(mu[i], tau)
+                mu[i] <- var.PI * (x[i]/(x[i] + beta))
+                }
+                sigma ~ dt(sigma.mu, sigma.tau, 3)  I(0.00000E+00, )
+                tau <- 1/sigma*sigma
+                }
+                ")
+    file.curve.fitting <- file.path(getwd(),fileext="model_curve_fitting_EVSI.txt")
+    writeLines(model.ab,file.curve.fitting)
 
-  #Calcualte the EVSI accross different WTP
-  print("Using curve fitting to find EVSI for alternative sample sizes")
-  wtp.seq<-seq(min(he$k),max(he$k),length.out=length.wtp)
-  ##### GB: Need to define the variables var.PI and x, or else when compiling the package R will throw a message for no-bindings
-  var.PI=x=NULL
-  #####
-  #Write the Model - remove need for R2OpenBUGS so can run with just JAGS.
-  model.ab<-c("model
-{
-    beta ~ dnorm(Nmax/2, shape.Nmax)  T(0.00000E+00, )
-    for (i in 1:N) {
-        y[i] ~ dnorm(mu[i], tau)
-        mu[i] <- var.PI * (x[i]/(x[i] + beta))
+
+    CreateCov<-function(cov,i,j,d,k){
+      cov.i.j<-k^2*cov[i,j]-k*(cov[i,d+j]+cov[d+i,j])+cov[d+i,d+j]
+      return(cov.i.j)
     }
-    sigma ~ dt(sigma.mu, sigma.tau, 3)  T(0.00000E+00, )
-    tau <- 1/sigma^2
-}
-")
-  file.curve.fitting <- file.path("~",fileext="model_curve_fitting_EVSI.txt")
-  writeLines(model.ab,file.curve.fitting)
 
+    n.unique.entries<-he$n.comparisons+choose(he$n.comparisons,2)
+    beta.mat<-array(NA,dim=c(3000,length(wtp.seq),n.unique.entries))
+    k.<-1
+    start<-Sys.time()
+    #for k over the wtp dimension
+    for(k in wtp.seq){
+      #WTP level calculations
+      fitted.wtp<--(k*evi$fitted.effects[,-he$n.comparators]-evi$fitted.costs[,-he$n.comparators])
+      #IS THIS DEFINTIELY THE RIGHT INB.full?? Careful with the different ks...he$k and wtp...
+      INB.full<--(k*he$delta.e-he$delta.c)
+      #Variance of the fitted INB
+      var.INB<-as.matrix(var(fitted.wtp))
+      #Variance of the full INB
+      var.full<-as.matrix(var(INB.full))
 
-  CreateCov<-function(cov,i,j,d,k){
-    cov.i.j<-k^2*cov[i,j]-k*(cov[i,d+j]+cov[d+i,j])+cov[d+i,d+j]
-    return(cov.i.j)
-  }
+      n.entry<-1
+      for(i in 1:he$n.comparisons){
+        for(j in i:he$n.comparisons){
+          Var.X.prob<-sapply(var.prepost,CreateCov,i=i,j=j,d=he$n.comparisons,k=k)
 
-  n.unique.entries<-he$n.comparisons+choose(he$n.comparisons,2)
-  beta.mat<-array(NA,dim=c(3000,length(wtp.seq),n.unique.entries))
-  k.<-1
-  start<-Sys.time()
-  #for k over the wtp dimension
-  for(k in wtp.seq){
-    #WTP level calculations
-    fitted.wtp<--(k*evi$fitted.effects[,-he$n.comparators]-evi$fitted.costs[,-he$n.comparators])
-    #IS THIS DEFINTIELY THE RIGHT INB.full?? Careful with the different ks...he$k and wtp...
-    INB.full<--(k*he$delta.e-he$delta.c)
-    #Variance of the fitted INB
-    var.INB<-as.matrix(var(fitted.wtp))
-    #Variance of the full INB
-    var.full<-as.matrix(var(INB.full))
+          y<-t(var.full[i,j]-Var.X.prob)
 
-    n.entry<-1
-    for(i in 1:he$n.comparisons){
-      for(j in i:he$n.comparisons){
-    Var.X.prob<-sapply(var.prepost,CreateCov,i=i,j=j,d=he$n.comparisons,k=k)
+          data.a.b<-list(sigma.mu=sd(y)/2,
+                         sigma.tau=1/sd(y),
+                         N=length(N.samp),
+                         shape.Nmax=0.0005/max(N.samp),
+                         var.PI=var.INB[i,j],
+                         Nmax=max(N.samp)/2,
+                         y=as.vector(y),
+                         x=as.vector(N.samp)
+          )
+          inits<-list(list(beta=1,sigma=1))
 
-    y<-t(var.full[i,j]-Var.X.prob)
+          ####### GB: Should these parameters be modifiable???
+          n.burnin <- 1000  # Number of burn in iterations
+          n.thin<-1
+          n.iter <- 3000 # Number of iterations per chain
+          #######
 
-    data.a.b<-list(sigma.mu=sd(y)/2,
-                   sigma.tau=1/sd(y),
-                   N=length(N.samp),
-                   shape.Nmax=0.0005/max(N.samp),
-                   var.PI=var.INB[i,j],
-                   Nmax=max(N.samp),
-                   y=as.vector(y),
-                   x=as.vector(N.samp)
-    )
+          # Perform the MCMC simulation with BUGS
+          model.ab<- R2OpenBUGS::bugs(data.a.b,inits=inits,parameters.to.save="beta",
+                                        model.file=file.curve.fitting,n.burnin =n.burnin,
+                                        n.iter=n.iter+n.burnin,n.thin=n.thin,n.chains=1,
+                                        DIC=FALSE,debug=FALSE)
 
-    ####### GB: Should these parameters be modifiable???
-    n.burnin <- 1000  # Number of burn in iterations
-    n.thin<-1
-    n.iter <- 3000 # Number of iterations per chain
-    #######
-
-    # Perform the MCMC simulation with JAGS.
-    ####### GB: But what if the user doesn't have JAGS and only has BUGS?
-    ####### Or do  we *need* them to have JAGS?
-    #Runs the jags model based on the rjags package
-    # Checks if rjags is installed (and if not, asks for it)
-    if(!isTRUE(requireNamespace("rjags",quietly=TRUE))) {
-      stop("You need to install the R package 'rjags' and the software 'JAGS'. \nPlease see http://mcmc-jags.sourceforge.net/ for instructions
-           on installing 'JAGS' and then run in your R terminal:\n install.packages('rjags')")
-    }
-    Model.JAGS<- rjags::jags.model(file.curve.fitting,data=data.a.b,quiet=TRUE)
-    update(Model.JAGS,n.burnin,progress.bar="none")
-    beta.ab <- rjags::coda.samples(Model.JAGS, c("beta"), n.iter=n.iter,n.thin=n.thin,progress.bar="none")
-
-    beta.mat[,k.,n.entry]<-as.data.frame(beta.ab[[1]])[,1]
-    n.entry<-n.entry+1
+          beta.mat[,k.,n.entry]<-as.data.frame(model.ab$sims.matrix)[,1,]
+          n.entry<-n.entry+1
+          }
       }
-    }
 
-    if(k.==1){end<-Sys.time()
-    comp.time<-end-start
-    print(paste(c("Curve fitting updating requires ",round(comp.time,2)," seconds. There are ",length.wtp," willingness-to-pay values to consider.
-                  The remaining computation time is around ",round(comp.time*(length.wtp-1)/60,0)," minutes. The current time is ",strftime(Sys.time())),
-                sep="",collapse = ""))
+      if(k.==1){end<-Sys.time()
+      comp.time<-end-start
+      print(paste(c("Curve fitting updating requires ",round(comp.time,2)," seconds. There are ",length.wtp," willingness-to-pay values to consider.
+                    The remaining computation time is around ",round(comp.time*(length.wtp-1)/60,0)," minutes. The current time is ",strftime(Sys.time())),
+                  sep="",collapse = ""))
+      }
+      print(paste("Update",k.,"completed"))
+      k.<-k.+1
     }
-    print(paste("Update",k.,"completed"))
-    k.<-k.+1
   }
+
+
   #Return EVSI, plus evppi object and bcea object to plot EVSI.
   to.return<-list(beta = beta.mat,
                   N=N.samp,
