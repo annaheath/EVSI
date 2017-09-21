@@ -13,8 +13,10 @@ evsi.pop(evsi, trial.cost = NULL, setup = NULL, pp = NULL, Pop = c(0,
 \arguments{
 \item{evsi}{An evsi object.}
 
-\item{trial.cost}{Either a fixed trial cost (numeric) or a distribution for a trial cost (character string)
-- to give probability of cost-effectiveness for the trial. Can be NULL if setup and pp are both given}
+\item{trial.cost}{Either a fixed trial cost (numeric),a minimum and maximum value for the possible trial costs
+(numeric) or a distribution for a trial cost (character string) - to give probability of cost-effectiveness
+for the trial. Can be NULL if setup and pp are both given (and N if the sample size is not specified when
+the EVSI has been calculated/uploaded).}
 
 \item{setup}{Gives the setup costs of the trial. Can be NULL if trial.costs are given. If NULL and pp given
 setup is taken to be 0.}

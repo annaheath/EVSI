@@ -6,8 +6,10 @@ evsi.pop<-function(evsi,trial.cost=NULL,setup=NULL,pp=NULL,
   ##'Time Horizons for the treatment and incidence population
   ##'INPUTS:
   ##'@param evsi An evsi object.
-  ##'@param trial.cost Either a fixed trial cost (numeric) or a distribution for a trial cost (character string)
-  ##'   - to give probability of cost-effectiveness for the trial. Can be NULL if setup and pp are both given
+  ##'@param trial.cost Either a fixed trial cost (numeric),a minimum and maximum value for the possible trial costs
+  ##'    (numeric) or a distribution for a trial cost (character string) - to give probability of cost-effectiveness
+  ##'    for the trial. Can be NULL if setup and pp are both given (and N if the sample size is not specified when
+  ##'    the EVSI has been calculated/uploaded).
   ##'@param setup Gives the setup costs of the trial. Can be NULL if trial.costs are given. If NULL and pp given
   ##'   setup is taken to be 0.
   ##'@param pp Gives the per person costs of the trial. Can be NULL if trial.costs are given.
@@ -23,7 +25,7 @@ evsi.pop<-function(evsi,trial.cost=NULL,setup=NULL,pp=NULL,
   ##'
   ##OUTPUTS:
   ##' @return A graphic that gives the probability of a cost-effective trial.
-  
+
   #Legend
   alt.legend <- pos
   if (is.numeric(alt.legend) & length(alt.legend) == 2) {
@@ -45,8 +47,8 @@ evsi.pop<-function(evsi,trial.cost=NULL,setup=NULL,pp=NULL,
       alt.legend = "topright"
     else alt.legend = "topleft"
   }
-  
-  
+
+
   #Select WTP
   if(class(wtp)!="numeric"){
     wtp.select<-ceiling(length(evsi$attrib$wtp)/2)
@@ -55,22 +57,30 @@ evsi.pop<-function(evsi,trial.cost=NULL,setup=NULL,pp=NULL,
   if(class(wtp)=="numeric"){
     wtp.select<-which.min((evsi$attrib$wtp-wtp)^2)
   }
-  
+
   #Select N
-  if((class(N)!="numeric")||(class(evsi$attrib$N)!="numeric")){
-    N.select<-ceiling(length(evsi$attrib$N)/2)
-    N<-evsi$attrib$N[N.select]
+  if(class(evsi$attrib$N)!="numeric"){
+    N.select<-1
+    if(class(N)!="numeric"){N<-evsi$attrib$N}
+
   }
-  if(class(N)=="numeric"){
-    N.select<-which.min((evsi$attrib$N-N)^2)
+  if(class(evsi$attrib$N)=="numeric"){
+    if(class(N)!="numeric"){
+      N.select<-ceiling(length(evsi$attrib$N)/2)
+      N<-evsi$attrib$N[N.select]
+    }
+    if(class(N)=="numeric"){
+      N.select<-which.min((evsi$attrib$N-N)^2)
+    }
   }
-  
+
+
   #Select deteministic or probabilistic EVSI
   if(length(evsi$attrib$CI)==1){
     type.evsi<-"det"
     ##Select per person EVSI for plot
     evsi.params<-c(evsi$evsi[N.select,wtp.select,1],0)}
-  
+
   if(length(evsi$attrib$CI)>1){
     type.evsi<-"rand"
     q.1<-qnorm(evsi$attrib$CI[1])
@@ -84,25 +94,25 @@ evsi.pop<-function(evsi,trial.cost=NULL,setup=NULL,pp=NULL,
     discrep<-mean(quants,na.rm=T)
     if(discrep>0.2){warning("EVSI distribution not well approximated by a normal, the probabilistic EVSI analysis may be incorrect")}
   }
-  
+
   ##Determine trial costs
   if(is.null(trial.cost)){
     if(class(N)=="character"){
       stop("Please define the trial costs using trial.costs or the sample size of experiment using N=")
     }
-    
+
     if(is.null(setup)||is.null(pp)){stop("Please give the trial costs using either trial.costs for the full costs
                                          or setup and pp to give the set up and per person costs ")}
-    
+
     setup.params<-c(mean(setup),(range(setup)[2]-range(setup)[1])/4)
     pp.params<-c(mean(pp),(range(pp)[2]-range(pp)[1])/4)
     trial.cost<-c(setup.params[1]+pp.params[1]*N,sqrt(setup.params[2]^2+N^2*pp.params[2]^2))
     }
-  
-  
+
+
   #Colours for plotting
   colours<-colorRampPalette(c("black","navy","blue","skyblue","aliceblue","white"))(100)
-  
+
   ENBS<-function(evsi,Pop,Time,Dis,cost){
     #This calculation comes from a discounting of (exp(-Dis*Time)) but then you need to integrate over all
     #time points - hence divide by the discount rate and then multiply by some weird factor.
@@ -113,27 +123,28 @@ evsi.pop<-function(evsi,trial.cost=NULL,setup=NULL,pp=NULL,
     var<- (Pop/Dis*(1-exp(-Dis*Time)))^2*evsi.sd^2+cost.sd^2
     return(sqrt(var))
   }
-  
+
   if(class(trial.cost)=="numeric"){
-    if(length(trial.cost)==1){trial.cost<-c(trial.cost,0)}
-    
+    if(length(trial.cost)==1){trial.cost.params<-c(trial.cost,0)}
+    if(length(trial.cost)==2){trial.cost.params<-c(mean(trial.cost),(range(trial.cost)[2]-range(trial.cost)[1])/2)}
+
     Time.min<-min(Time);Time.max<-max(Time);Pop.min<-min(Pop);Pop.max<-max(Pop)
     dens.points<-100
     Time.seq<-seq(Time.min,Time.max,length.out=dens.points)
     Pop.seq<-seq(Pop.min,Pop.max,length.out=dens.points)
-    
+
     Prob.mat<-matrix(NA,nrow=length(Time.seq),ncol=length(Pop.seq))
     for(i in 1:length(Time.seq)){
       for(j in 1:length(Pop.seq)){
-        ENBS.mean<-ENBS(evsi.params[1],Pop.seq[j],Time.seq[i],Dis,trial.cost[1])
-        ENBS.sd<-ENBS.sd.calc(evsi.params[2],Pop.seq[j],Time.seq[i],Dis,trial.cost[2])
+        ENBS.mean<-ENBS(evsi.params[1],Pop.seq[j],Time.seq[i],Dis,trial.cost.params[1])
+        ENBS.sd<-ENBS.sd.calc(evsi.params[2],Pop.seq[j],Time.seq[i],Dis,trial.cost.params[2])
         #Need to find the probability that the ENBS is GREATER than 0
         Prob.mat[i,j]<-pnorm(0,ENBS.mean,ENBS.sd,lower.tail=FALSE)
       }
     }
-    
+
   }
-  
+
   EVSI.full<-function(evsi,Pop,Time,Dis){
     evsi<-Pop*evsi/Dis*(1-exp(-Dis*Time))
     return(evsi)
@@ -145,9 +156,9 @@ evsi.pop<-function(evsi,trial.cost=NULL,setup=NULL,pp=NULL,
       type.evsi<-"det"
       ##Select per person EVSI for plot
       evsi.focal<-evsi$evsi[N.select,wtp.select,CI.select]
-      
+
     }
-    
+
     split.1<-strsplit(trial.cost,split=NULL)
     commas<-which(split.1[[1]]==",")
     first.braket<-which(split.1[[1]]=="(")+1
@@ -161,15 +172,15 @@ evsi.pop<-function(evsi,trial.cost=NULL,setup=NULL,pp=NULL,
     }
     args[[n.args]]<-eval(parse(text=(paste(split.1[[1]][(commas[length(commas)]+1):second.braket],
                                            sep="",collapse=""))))
-    
+
     func.samp<-paste(split.1[[1]][2:(first.braket-2)],sep="",collapse="")
     func.samp<-paste("p",func.samp,sep="",collapse="")
-    
+
     Time.min<-min(Time);Time.max<-max(Time);Pop.min<-min(Pop);Pop.max<-max(Pop)
     dens.points<-100
     Time.seq<-seq(Time.min,Time.max,length.out=dens.points)
     Pop.seq<-seq(Pop.min,Pop.max,length.out=dens.points)
-    
+
     Prob.mat<-matrix(NA,nrow=length(Time.seq),ncol=length(Pop.seq))
     for(i in 1:length(Time.seq)){
       for(j in 1:length(Pop.seq)){
@@ -183,7 +194,7 @@ evsi.pop<-function(evsi,trial.cost=NULL,setup=NULL,pp=NULL,
         main="Probability of Cost-Effective Trial",xlab="Time Horizon",ylab="Incidence Population",
         xlim = c(Time.min,Time.max),ylim=c(Pop.min,Pop.max),
         breaks=seq(0,1,length.out=101))
-  
+
   legend(alt.legend,c("Prob=0",rep(NA,98/2),"Prob=.5",rep(NA,96/2),"Prob=1"),fill=colours,border=colours,cex=0.75,y.intersp=0.15)
-  
+
 }
