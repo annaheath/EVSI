@@ -28,7 +28,7 @@ evsi.plot.dynam<-function(evsi,width=600,height=600){
   ui<-shiny::fluidPage(theme=shinythemes::shinytheme('united'),
                        shiny::titlePanel(shiny::h1("Visualisations for the EVSI")),
                        shiny::mainPanel(
-                         uiOutput("ByN"),width=12
+                         shiny::uiOutput("ByN"),width=12
                            )
   )
   server<-function(input,output,session){
