@@ -1,4 +1,4 @@
-##evsi.pop############################################################
+##enbs.plot############################################################
 enbs.plot<-function(evsi,setup,pp,prob=NULL,
                     Pop=10000,Time=10,Dis=0.035,
                     wtp=NULL,N=NULL,pos=c("bottomright")){
