@@ -29,15 +29,15 @@ evsi.upload<-function(e,c,parameter,input,EVSI.mat=NULL,model.stats=NULL,wtp=NUL
   ##'   economic model
   ##'   @examples
   ##'   ...
-  
+
   if(is.null(EVSI.mat)&&is.null(model.stats)){
     stop("You have not provided the EVSI. Please either use EVSI.mat or model.stats to give a matrix of EVSI values")}
-  
+
   #Read in EVSI matrix from file
   if(is.null(EVSI.mat)){
     EVSI.mat<-as.matrix(read.csv(model.stats,header=FALSE))
   }
-  
+
   #Set wtp values if not given
   if(is.null(wtp)){
     wtp<-as.numeric(EVSI.mat[1,])
@@ -46,25 +46,25 @@ evsi.upload<-function(e,c,parameter,input,EVSI.mat=NULL,model.stats=NULL,wtp=NUL
       wtp<-wtp[-1]
     }
   }
-  
+
   #Set N values if not given
   if(is.null(N)){
     N<-EVSI.mat[,1]
     EVSI.mat<-EVSI.mat[,-1]
   }
-  
+
   #Set EVSI as an array
   EVSI.arr<-array(EVSI.mat,c(dim(EVSI.mat),1))
-  
+
   #Find BCEA object
   if(!isTRUE(requireNamespace("BCEA",quietly=TRUE))) {
     stop("You need to install the R package 'BCEA'. Please run in your R terminal:\n install.packages('BCEA')")
   }
   he<-BCEA::bcea(e,c)
-  
+
   #Calculate EVPPI object
-  evi<-BCEA::evppi(parameter,input,he,method="gam")
-  
+  evi<-BCEA::evppi(parameter,input,he)
+
   to.return<-list(evsi=EVSI.arr,attrib=list(wtp=wtp,N=N,CI=0.5),evppi=evi,he=he)
   class(to.return)<-"evsi"
   return(to.return)
