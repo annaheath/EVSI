@@ -401,44 +401,69 @@ evsi<-function(model.stats,data,effects=NULL,costs=NULL,he=NULL,evi=NULL,paramet
 
   #Calcualte the EVSI accross different WTP
   mean.var<-apply(simplify2array(var.prepost),1:2,mean)
-  EVSI<-array(NA,dim=c(1,length(he$k),1))
-  INB.full<-array(he$ib,c(length(he$k),he$n.sim,he$n.comparisons))
-  k.<-1
-  #EVSI[,1:length(he$k),]<-foreach(k=he$k,.combine="c") %do% {
-  for(k in he$k){
-    #Fitted INB for each k - the fitted INB is negative because of how the evppi function works, CAN I REMEMBER WHY??
-    INB<-(-as.matrix(k*evi$fitted.effects[,-he$n.comparators]-evi$fitted.costs[,-he$n.comparators]))
-    #Variance of the fitted INB
-    var.INB<-as.matrix(var(INB))
-    #Variance of the full INB
-    var.full<-as.matrix(var(INB.full[k.,,]))
-    #Mean preposterior variance for each k
-    Var<-matrix(NA, nrow=he$n.comparisons,ncol=he$n.comparisons)
-    for(i in 1:he$n.comparisons){
-      for(j in 1:i)
-        Var[i,j]<-Var[j,i]<-CreateCov(mean.var,i,j,he$n.comparisons,k)
-    }
-    #Var<-k^2*mean.var[1,1]+mean.var[2,2]-2*k*mean.var[1,2]
-    #Ensure that the preposterior variance is a positive definite matrix - to avoid simulation error.
-    if(he$n.comparisons==1){pre.post.var<-max(0,var.full-Var)
-    INB.star<-(INB-mean(INB))/sd(INB)*sqrt(pre.post.var)+mean(INB)}
-    if(he$n.comparisons>1){pre.post.var<-var.full-Var
-    check<-base::eigen(pre.post.var)
+  mean.var.e<-mean.var[1:he$n.comparisons,1:he$n.comparisons]
+  mean.var.c<-mean.var[(he$n.comparisons+1):(2*he$n.comparisons),(he$n.comparisons+1):(2*he$n.comparisons)]
+  e.var<-var(he$delta.e)
+  c.var<-var(he$delta.c)
+  e.fit<-evi$fitted.effects[,-he$n.comparators]
+  e.fit.var<-var(e.fit)
+  c.fit<-evi$fitted.costs[,-he$n.comparators]
+  c.fit.var<-var(c.fit)
+
+
+  #Find dist. prepost mean for e and c
+  if(he$n.comparisons==1){
+    #e
+    pre.post.var.e<-max(0,e.var-mean.var.e)
+    e.star<-(e.fit-mean(e.fit))/sd(e.fit)*sqrt(pre.post.var.e)+mean(e.fit)
+    #
+    pre.post.var.c<-max(0,c.var-mean.var.c)
+    c.star<-(c.fit-mean(c.fit))/sd(c.fit)*sqrt(pre.post.var.c)+mean(c.fit)
+  }
+
+  if(he$n.comparisons>1){
+    #e
+    pre.post.var.e<-e.var-mean.var.e
+    check<-base::eigen(pre.post.var.e)
     #Defintion SQRT from https://stat.ethz.ch/pipermail/r-help/2007-January/124147.html
-    pre.post.var.sqrt<-check$vectors%*%diag(sqrt(pmax(0,check$values)))%*%t(check$vectors)
-    INB.mean<-matrix(rep(base::colMeans(INB),he$n.sim),nrow=he$n.sim,byrow=TRUE)
+    pre.post.var.sqrt.e<-check$vectors%*%diag(sqrt(pmax(0,check$values)))%*%t(check$vectors)
+    e.mean<-matrix(rep(base::colMeans(e.fit),he$n.sim),nrow=he$n.sim,byrow=TRUE)
 
     #Fast matrix square root inverse
-    decom<-eigen(var.INB)
-    var.INB.sqrt.inv<-chol2inv(chol(decom$vectors%*%diag(sqrt(decom$values))%*%t(decom$vectors)))
+    decom<-eigen(e.fit.var)
+    var.INB.sqrt.inv.e<-chol2inv(chol(decom$vectors%*%diag(sqrt(decom$values))%*%t(decom$vectors)))
 
     #Rescale fitted INB
-    INB.star<-  (INB-INB.mean)%*%var.INB.sqrt.inv%*%
-      pre.post.var.sqrt+INB.mean}
+    e.star<-  (e.fit-e.mean)%*%var.INB.sqrt.inv.e%*%
+      pre.post.var.sqrt.e+e.mean
+
+    #c
+    pre.post.var.c<-c.var-mean.var.c
+    check<-base::eigen(pre.post.var.c)
+    #Defintion SQRT from https://stat.ethz.ch/pipermail/r-help/2007-January/124147.html
+    pre.post.var.sqrt.c<-check$vectors%*%diag(sqrt(pmax(0,check$values)))%*%t(check$vectors)
+    c.mean<-matrix(rep(base::colMeans(c.fit),he$n.sim),nrow=he$n.sim,byrow=TRUE)
+
+    #Fast matrix square root inverse
+    decom<-eigen(c.fit.var)
+    var.INB.sqrt.inv.c<-chol2inv(chol(decom$vectors%*%diag(sqrt(decom$values))%*%t(decom$vectors)))
+
+    #Rescale fitted INB
+    c.star<-  (c.fit-c.mean)%*%var.INB.sqrt.inv.c%*%
+      pre.post.var.sqrt.c+c.mean
+
+    }
+
+
+  EVSI<-array(NA,dim=c(1,length(he$k),1))
+  k.<-1
+  for(k in he$k){
+    INB.star<-k*(-e.star)+c.star
     #Calculate EVSI
     EVSI[,k.,]<-mean(apply(cbind(INB.star,0),1,max))-max(apply(cbind(INB.star,0),2,mean))
     k.<-k.+1
   }
+
   #Return EVSI, plus evppi object and bcea object to plot EVSI plus attrib which fits in with later objects..
   to.return<-list(evsi = EVSI,
                   attrib=list(wtp=he$k,N="-",CI="No Uncertainty"),
