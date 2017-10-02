@@ -394,11 +394,6 @@ evsi<-function(model.stats,data,effects=NULL,costs=NULL,he=NULL,evi=NULL,paramet
     }
   }
 
-  CreateCov<-function(cov,i,j,d,k){
-    cov.i.j<-k^2*cov[i,j]-k*(cov[i,d+j]+cov[d+i,j])+cov[d+i,d+j]
-    return(cov.i.j)
-  }
-
   #Calcualte the EVSI accross different WTP
   mean.var<-apply(simplify2array(var.prepost),1:2,mean)
   mean.var.e<-mean.var[1:he$n.comparisons,1:he$n.comparisons]
