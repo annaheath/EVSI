@@ -28,21 +28,21 @@ evsi.calc<-function(comp.evsi.N,wtp=NULL,N=NULL,CI=NULL){
   cl<-class(wtp)
   #Select all wtp values if NULL
   if(cl!="numeric"){
-    wtp<-comp.evsi.N$wtp
+    wtp<-comp.evsi.N$he$k
   }
   wtp.length<-length(wtp)
-  #Select wtp from the grid of wtp if chosen by user.
-  if(cl=="numeric"){
-    for(i in 1:wtp.length){
-      wtp[i]<-comp.evsi.N$wtp[which.min(abs(wtp[i]-comp.evsi.N$wtp))]
-    }
-  }
 
   #Format N
   cl<-class(N)
   #Select all N values if NULL
   if(is.null(N)){
-    N<-seq(min(comp.evsi.N$N),max(comp.evsi.N$N),by=10)
+    N.min<-min(comp.evsi.N$N)
+    N.max<-max(comp.evsi.N$N)
+    if(N.min==N.max){
+      N<-N.min
+    }
+
+    N<-unique(round(seq(N.min,N.max,length.out=100)))
   }
   N.length<-length(N)
 
@@ -52,55 +52,27 @@ evsi.calc<-function(comp.evsi.N,wtp=NULL,N=NULL,CI=NULL){
   if(cl!="numeric"){
     CI<-c(0.025,0.25,0.5,0.75,0.975)
   }
-  CI.length<-length(CI)
   #Set N as requested by user
   if(cl=="numeric"){
     CI<-CI
+    CI.inv<-1-CI
+    CI<-ordered(unique(CI,CI.inv))
   }
+  CI.length<-length(CI)
   #Use CI to create a beta matrix
   #Find the appropriate quantiles for the beta parameter of interest
-  beta.quantiles<-apply(comp.evsi.N$beta,c(2,3),quantile,prob=CI)
+  beta.quantiles<-array(apply(comp.evsi.N$beta,c(2,3),quantile,prob=CI),dim=c(CI.length,2,dim(comp.evsi.N$beta)[3]))
 
-  #Extracting the beta parameter for the wtp of interest
-  beta.focal<-beta.quantiles[,which(comp.evsi.N$wtp%in%wtp),]
+  #Extracting the beta parameter for the costs and effects
+  beta.focal.e<-beta.quantiles[,1,]
+  beta.focal.c<-beta.quantiles[,2,]
 
-  if(length(dim(beta.focal))==2){dim(beta.focal)<-c(dim(beta.focal),1)}
-  EVSI.mat<-array(NA,dim=c(N.length,wtp.length,CI.length))
-  INB.full<-array(comp.evsi.N$he$ib,c(length(comp.evsi.N$he$k),comp.evsi.N$he$n.sim,comp.evsi.N$he$n.comparisons))
+  e.full<-(comp.evsi.N$he$delta.e)
+  c.full<-(comp.evsi.N$he$delta.c)
+  e.fit<-comp.evsi.N$evi$fitted.effects[,-comp.evsi.N$he$n.comparators]
+  c.fit<-comp.evsi.N$evi$fitted.costs[,-comp.evsi.N$he$n.comparators]
 
-  calc.EVSI<-function(beta.focal,wtp,N){
-    INB.full<--(wtp*comp.evsi.N$he$delta.e-comp.evsi.N$he$delta.c)
-    var.full<-as.matrix(var(INB.full))
-    #Find the fitted values for the wtp
-    INB<--(wtp*comp.evsi.N$evi$fitted.effects[,-comp.evsi.N$he$n.comparators]-
-      comp.evsi.N$evi$fitted.costs[,-comp.evsi.N$he$n.comparators])
-    var.INB<-var(INB)
-    #Variance for a specific N and beta
-    var.pre<-var(INB)*(N/(N+beta.focal))
-
-    if(comp.evsi.N$he$n.comparisons==1){
-      pre.post.var<-max(0,var.pre)
-      INB.star<-(INB-mean(INB))/sd(INB)*sqrt(pre.post.var)+mean(INB)
-      }
-    #Rescaled fitted values
-    if(comp.evsi.N$he$n.comparisons>1){pre.post.var<-var.pre
-    check<-base::eigen(pre.post.var)
-    #Defintion SQRT from https://stat.ethz.ch/pipermail/r-help/2007-January/124147.html
-    pre.post.var.sqrt<-check$vectors%*%diag(sqrt(pmax(0,check$values)))%*%t(check$vectors)
-    INB.mean<-matrix(rep(base::colMeans(INB),comp.evsi.N$he$n.sim),nrow=comp.evsi.N$he$n.sim,byrow=TRUE)
-
-    #Fast matrix square root inverse
-    decom<-eigen(var.INB)
-    var.INB.sqrt.inv<-chol2inv(chol(decom$vectors%*%diag(sqrt(decom$values))%*%t(decom$vectors)))
-
-    #Rescale fitted INB
-    INB.star<-  (INB-INB.mean)%*%var.INB.sqrt.inv%*%
-                       pre.post.var.sqrt+INB.mean}
-    #Calculate EVSI
-    EVSI<-mean(apply(cbind(INB.star,0),1,max))-max(apply(cbind(INB.star,0),2,mean))
-    return(EVSI)
-  }
-
+  #How to populate the variance matrices
   n.choices<-1
   index<-matrix(NA,nrow=comp.evsi.N$he$n.comparisons,ncol=comp.evsi.N$he$n.comparisons)
   for(i in 1:comp.evsi.N$he$n.comparisons){
@@ -110,12 +82,67 @@ evsi.calc<-function(comp.evsi.N,wtp=NULL,N=NULL,CI=NULL){
     }
   }
 
+  #Function to find rescaled costs and effects
+  calc.fit<-function(beta.focal,N,fit,full){
+    var.full<-as.matrix(var(full))
+    #Find the fitted values for the wtp
+    var.fit<-var(fit)
+    #Variance for a specific N and beta
+    var.pre<-var.fit*(N/(N+beta.focal))
+
+    if(comp.evsi.N$he$n.comparisons==1){
+      pre.post.var<-max(0,var.pre)
+      fit.star<-(fit-mean(fit))/sd(fit)*sqrt(pre.post.var)+mean(fit)
+    }
+    #Rescaled fitted values
+    if(comp.evsi.N$he$n.comparisons>1){
+      pre.post.var<-var.pre
+      check<-base::eigen(pre.post.var)
+      #Defintion SQRT from https://stat.ethz.ch/pipermail/r-help/2007-January/124147.html
+      pre.post.var.sqrt<-check$vectors%*%diag(sqrt(pmax(0,check$values)))%*%t(check$vectors)
+      fit.mean<-matrix(rep(base::colMeans(fit),comp.evsi.N$he$n.sim),nrow=comp.evsi.N$he$n.sim,byrow=TRUE)
+
+      #Fast matrix square root inverse
+      decom<-eigen(var.fit)
+      var.full.sqrt.inv<-chol2inv(chol(decom$vectors%*%diag(sqrt(decom$values))%*%t(decom$vectors)))
+
+      #Rescale fitted INB
+      fit.star<-  (fit-fit.mean)%*%var.full.sqrt.inv%*%
+        pre.post.var.sqrt+fit.mean}
+    return(fit.star)
+  }
+
+  e.star<-list()
   for(i in 1:CI.length){
-    for(j in 1:wtp.length){
-      beta.of.interest<-matrix(beta.focal[i,j,index],nrow=comp.evsi.N$he$n.comparisons,ncol=comp.evsi.N$he$n.comparisons)
-      EVSI.mat[,j,i]<-sapply(N,calc.EVSI,beta.focal=beta.of.interest,wtp=wtp[j])
+    e.star[[i]]<-lapply(N,calc.fit,beta.focal=matrix(beta.focal.e[i,index],
+                                                     nrow=comp.evsi.N$he$n.comparisons,ncol=comp.evsi.N$he$n.comparisons),
+                        fit=e.fit,full=e.full)
+
+  }
+
+  c.star<-list()
+  for(i in 1:CI.length){
+    c.star[[i]]<-lapply(N,calc.fit,beta.focal=matrix(beta.focal.c[i,index],
+                                                     nrow=comp.evsi.N$he$n.comparisons,ncol=comp.evsi.N$he$n.comparisons),
+                        fit=c.fit,full=c.full)
+
+  }
+
+  wtp.func<-function(wtp.s){
+    reverse<-which((CI>(1-CI[i]-1E-8))&(CI<1-CI[i]+1E-8))
+    INB.star<-wtp.s*(-e.star[[i]][[j]])+c.star[[reverse]][[j]]
+    EVSI<-sum(do.call(pmax,as.data.frame(cbind(INB.star,0))))/comp.evsi.N$he$n.sim-
+      max(apply(cbind(INB.star,0),2,function(x){sum(x)/comp.evsi.N$he$n.sim}))
+    return(EVSI)
+  }
+
+  EVSI.mat<-array(NA,dim=c(N.length,wtp.length,CI.length))
+  for(i in 1:CI.length){
+    for(j in 1:N.length){
+        EVSI.mat[j,,i]<-sapply(wtp,wtp.func)
     }
   }
+
   to.return<-list(evsi=EVSI.mat,
                   attrib=list(wtp=wtp,N=N,CI=CI),
                   evppi=comp.evsi.N$evi,
