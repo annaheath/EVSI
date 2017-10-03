@@ -2,7 +2,7 @@
 evsi<-function(model.stats,data,effects=NULL,costs=NULL,he=NULL,evi=NULL,parameters=NULL,Q=30,data.stats=NULL,update=c("bugs","jags"),
                n.burnin=1000,n.thin=1,n.iter=5000){
   ##'Compute the EVSI for a fixed design using the Heath et al. method
-  ##'INPUTS:
+  ##INPUTS:
   ##'@param model.stats A .txt file containing the model file of a Bayesian model.
   ##'   This should be a BUGS or JAGS model.
   ##'@param data A string or vector of strings that defines the name of the future
@@ -30,8 +30,13 @@ evsi<-function(model.stats,data,effects=NULL,costs=NULL,he=NULL,evi=NULL,paramet
   ##'@param n.burnin The burnin for the JAGS/BUGS model
   ##'@param n.iter The number of interations for the JAGS/BUGS model
   ##'
-  ##OUTPUTS:
-  ##'@return The EVSI for the specific design by willingness-to-pay. This can be plotted.
+  ##'@return An evsi object.
+  ##'1. evsi An array containing the EVSI by wtp, N and across different uncertaincies
+  ##'2. attrib A list of wtp, N and prob describing the attributes of the evsi matrix.
+  ##'3. evppi An evppi object containing all the information about the calculation of
+  ##'   EVPPI.
+  ##'4. he A bcea object containing all the information about the underlying health
+  ##'   economic model
   ##'@examples NULL
 
   #Is data in the correct format??
@@ -462,7 +467,7 @@ evsi<-function(model.stats,data,effects=NULL,costs=NULL,he=NULL,evi=NULL,paramet
   #Return EVSI, plus evppi object and bcea object to plot EVSI plus attrib which fits in with later objects..
   to.return<-list(evsi = EVSI,
                   attrib=list(wtp=he$k,N="-",CI="No Uncertainty"),
-                  evppi=evi,
+                  evi=evi,
                   he=he)
   class(to.return)<-"evsi"
   return(to.return)
