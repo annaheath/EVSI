@@ -2,8 +2,7 @@
 % Please edit documentation in R/evsi.R
 \name{evsi}
 \alias{evsi}
-\title{Compute the EVSI for a fixed design using the Heath et al. method
-INPUTS:}
+\title{Compute the EVSI for a fixed design using the Heath et al. method}
 \usage{
 evsi(model.stats, data, effects = NULL, costs = NULL, he = NULL,
   evi = NULL, parameters = NULL, Q = 30, data.stats = NULL,
@@ -51,11 +50,16 @@ the Bayesian model file given in model.stats.}
 \item{n.iter}{The number of interations for the JAGS/BUGS model}
 }
 \value{
-The EVSI for the specific design by willingness-to-pay. This can be plotted.
+An evsi object.
+1. evsi An array containing the EVSI by wtp, N and across different uncertaincies
+2. attrib A list of wtp, N and prob describing the attributes of the evsi matrix.
+3. evppi An evppi object containing all the information about the calculation of
+  EVPPI.
+4. he A bcea object containing all the information about the underlying health
+  economic model
 }
 \description{
 Compute the EVSI for a fixed design using the Heath et al. method
-INPUTS:
 }
 \examples{
 NULL
