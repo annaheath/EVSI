@@ -6,9 +6,9 @@
 sample sizes.}
 \usage{
 comp.evsi.N(model.stats, data, N, N.range = c(30, 1500), effects, costs,
-  he = NULL, parameters = NULL, evi = NULL, Q = 50, length.wtp = 150,
-  data.stats = NULL, update = c("bugs", "jags"), n.burnin = 1000,
-  n.thin = 1, n.iter = 5000)
+  he = NULL, parameters = NULL, evi = NULL, Q = 50, data.stats = NULL,
+  update = c("bugs", "jags"), n.burnin = 1000, n.thin = 1,
+  n.iter = 5000)
 }
 \arguments{
 \item{model.stats}{A .txt file containing the model file of a Bayesian model.
@@ -44,8 +44,6 @@ This can be given OR an evppi object needs to be given.}
 that are being informed by the sample information.}
 
 \item{Q}{The number of quadrature points used the estimate the EVSI.}
-
-\item{length.wtp}{The number of willingness to pay values that should be considered to estimate the EVSI}
 
 \item{data.stats}{A data file for the BUGS/JAGS model. This is the data used to inform
 the base case analysis. If empty then it is assumed that the models are}
