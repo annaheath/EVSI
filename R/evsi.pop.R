@@ -85,10 +85,10 @@ evsi.pop<-function(evsi,trial.cost=NULL,setup=NULL,pp=NULL,
     type.evsi<-"rand"
     q.1<-qnorm(evsi$attrib$CI[1])
     q.2<-qnorm(evsi$attrib$CI[2])
-    evsi.1<-evsi$evsi[N.select,wtp.select,1]
-    evsi.2<-evsi$evsi[N.select,wtp.select,2]
+    evsi.1<-evsi$evsi[N.select,wtp.select,order(evsi$evsi[N.select,wtp.select,])[1]]
+    evsi.2<-evsi$evsi[N.select,wtp.select,order(evsi$evsi[N.select,wtp.select,])[2]]
     evsi.params<-c((q.2*evsi.1-evsi.2*q.1)/(q.2-q.1),(evsi.2-evsi.1)/(q.2-q.1))
-    quants<-array()
+    #quants<-array()
     #for(i in 1:(length(evsi$attrib$CI)-1)){
     #  quants[i]<-pnorm(evsi$evsi[N.select,wtp.select,i],evsi.params[1],evsi.params[2])-evsi$attrib$CI[length(evsi$attrib$CI)-(i-1)]}
     #discrep<-mean(quants,na.rm=T)
