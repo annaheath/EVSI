@@ -114,7 +114,7 @@ evsi.calc<-function(comp.evsi.N,wtp=NULL,N=NULL,CI=NULL){
 
   e.star<-list()
   for(i in 1:CI.length){
-    e.star[[i]]<-lapply(N,calc.fit,beta.focal=matrix(beta.focal.e[i,index],
+    e.star[[i]]<-lapply(N,calc.fit,beta.focal=matrix(as.matrix(beta.focal.e)[i,index],
                                                      nrow=comp.evsi.N$he$n.comparisons,ncol=comp.evsi.N$he$n.comparisons),
                         fit=e.fit,full=e.full)
 
@@ -122,15 +122,14 @@ evsi.calc<-function(comp.evsi.N,wtp=NULL,N=NULL,CI=NULL){
 
   c.star<-list()
   for(i in 1:CI.length){
-    c.star[[i]]<-lapply(N,calc.fit,beta.focal=matrix(beta.focal.c[i,index],
+    c.star[[i]]<-lapply(N,calc.fit,beta.focal=matrix(as.matrix(beta.focal.c)[i,index],
                                                      nrow=comp.evsi.N$he$n.comparisons,ncol=comp.evsi.N$he$n.comparisons),
                         fit=c.fit,full=c.full)
 
   }
 
   wtp.func<-function(wtp.s){
-    reverse<-which((CI>(1-CI[i]-1E-8))&(CI<1-CI[i]+1E-8))
-    INB.star<-wtp.s*(-e.star[[i]][[j]])+c.star[[reverse]][[j]]
+    INB.star<-wtp.s*(-e.star[[i]][[j]])+c.star[[i]][[j]]
     EVSI<-sum(do.call(pmax,as.data.frame(cbind(INB.star,0))))/comp.evsi.N$he$n.sim-
       max(apply(cbind(INB.star,0),2,function(x){sum(x)/comp.evsi.N$he$n.sim}))
     return(EVSI)

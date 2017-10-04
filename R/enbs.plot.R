@@ -88,8 +88,8 @@ enbs.plot<-function(evsi,setup,pp,prob=NULL,
     q.2<-qnorm(evsi$attrib$CI[2])
     evsi.params<-array(NA,dim=c(length.N,2))
     for(i in 1:length.N){
-      evsi.1<-evsi$evsi[N.select[i],wtp.select,length(evsi$attrib$CI)]
-      evsi.2<-evsi$evsi[N.select[i],wtp.select,length(evsi$attrib$CI)-1]
+      evsi.1<-evsi$evsi[N.select[i],wtp.select,order(evsi$evsi[N.select[i],wtp.select,])[1]]
+      evsi.2<-evsi$evsi[N.select[i],wtp.select,order(evsi$evsi[N.select[i],wtp.select,])[2]]
       evsi.params[i,]<-c((q.2*evsi.1-evsi.2*q.1)/(q.2-q.1),(evsi.2-evsi.1)/(q.2-q.1))}
   }
 

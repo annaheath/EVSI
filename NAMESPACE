@@ -1,6 +1,6 @@
 export(comp.evsi.N)
 export(evsi.calc)
-export(evsi.plot.dynam)
+export(launch.App)
 export(evsi.pop)
 export(evsi)
 export(evsi.upload)
