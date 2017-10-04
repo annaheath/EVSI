@@ -114,7 +114,7 @@ evsi.calc<-function(comp.evsi.N,wtp=NULL,N=NULL,CI=NULL){
 
   e.star<-list()
   for(i in 1:CI.length){
-    e.star[[i]]<-lapply(N,calc.fit,beta.focal=matrix(beta.focal.e[i,index],
+    e.star[[i]]<-lapply(N,calc.fit,beta.focal=matrix(as.matrix(beta.focal.e)[i,index],
                                                      nrow=comp.evsi.N$he$n.comparisons,ncol=comp.evsi.N$he$n.comparisons),
                         fit=e.fit,full=e.full)
 
@@ -122,7 +122,7 @@ evsi.calc<-function(comp.evsi.N,wtp=NULL,N=NULL,CI=NULL){
 
   c.star<-list()
   for(i in 1:CI.length){
-    c.star[[i]]<-lapply(N,calc.fit,beta.focal=matrix(beta.focal.c[i,index],
+    c.star[[i]]<-lapply(N,calc.fit,beta.focal=matrix(as.matrix(beta.focal.c)[i,index],
                                                      nrow=comp.evsi.N$he$n.comparisons,ncol=comp.evsi.N$he$n.comparisons),
                         fit=c.fit,full=c.full)
 
