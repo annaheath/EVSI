@@ -89,10 +89,10 @@ evsi.pop<-function(evsi,trial.cost=NULL,setup=NULL,pp=NULL,
     evsi.2<-evsi$evsi[N.select,wtp.select,2]
     evsi.params<-c((q.2*evsi.1-evsi.2*q.1)/(q.2-q.1),(evsi.2-evsi.1)/(q.2-q.1))
     quants<-array()
-    for(i in 1:(length(evsi$attrib$CI)-1)){
-      quants[i]<-pnorm(evsi$evsi[N.select,wtp.select,i],evsi.params[1],evsi.params[2])-evsi$attrib$CI[length(evsi$attrib$CI)-(i-1)]}
-    discrep<-mean(quants,na.rm=T)
-    if(discrep>0.2){warning("EVSI distribution not well approximated by a normal, the probabilistic EVSI analysis may be incorrect")}
+    #for(i in 1:(length(evsi$attrib$CI)-1)){
+    #  quants[i]<-pnorm(evsi$evsi[N.select,wtp.select,i],evsi.params[1],evsi.params[2])-evsi$attrib$CI[length(evsi$attrib$CI)-(i-1)]}
+    #discrep<-mean(quants,na.rm=T)
+    #if(discrep>0.2){warning("EVSI distribution not well approximated by a normal, the probabilistic EVSI analysis may be incorrect")}
   }
 
   ##Determine trial costs
