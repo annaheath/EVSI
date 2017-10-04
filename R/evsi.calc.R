@@ -129,8 +129,7 @@ evsi.calc<-function(comp.evsi.N,wtp=NULL,N=NULL,CI=NULL){
   }
 
   wtp.func<-function(wtp.s){
-    reverse<-which((CI>(1-CI[i]-1E-8))&(CI<1-CI[i]+1E-8))
-    INB.star<-wtp.s*(-e.star[[i]][[j]])+c.star[[reverse]][[j]]
+    INB.star<-wtp.s*(-e.star[[i]][[j]])+c.star[[i]][[j]]
     EVSI<-sum(do.call(pmax,as.data.frame(cbind(INB.star,0))))/comp.evsi.N$he$n.sim-
       max(apply(cbind(INB.star,0),2,function(x){sum(x)/comp.evsi.N$he$n.sim}))
     return(EVSI)
