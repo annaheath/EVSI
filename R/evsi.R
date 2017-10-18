@@ -467,7 +467,7 @@ evsi<-function(model.stats,data,effects=NULL,costs=NULL,he=NULL,evi=NULL,paramet
   #Return EVSI, plus evppi object and bcea object to plot EVSI plus attrib which fits in with later objects..
   to.return<-list(evsi = EVSI,
                   attrib=list(wtp=he$k,N="-",CI="No Uncertainty"),
-                  evi=evi,
+                  evppi=evi,
                   he=he)
   class(to.return)<-"evsi"
   return(to.return)
