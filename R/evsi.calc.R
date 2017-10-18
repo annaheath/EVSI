@@ -144,7 +144,7 @@ evsi.calc<-function(comp.evsi.N,wtp=NULL,N=NULL,CI=NULL){
 
   to.return<-list(evsi=EVSI.mat,
                   attrib=list(wtp=wtp,N=N,CI=CI),
-                  evppi=comp.evsi.N$evi,
+                  evppi=comp.evsi.N$evppi,
                   he=comp.evsi.N$he)
   class(to.return)<-"evsi"
   return(to.return)
