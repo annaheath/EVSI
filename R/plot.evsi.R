@@ -62,11 +62,11 @@ plot.evsi<-function(evsi,pos=c(0,0.8),N=NULL){
   #Plot the EVPI and create graphic
   plot(evsi$he$k, evsi$he$evi, t = "l", xlab = "Willingness to pay",
        ylab = "", main = "Expected Value of Sample Information",
-       lwd = 2, ylim = range(range(evsi$he$evi), range(evsi$evppi$evppi),range(EVSI)))
+       lwd = 2, ylim = range(range(evsi$he$evi), range(evsi$evi$evppi),range(EVSI)))
   
   #Plot the EVPPI on the graphic
   col = "black"
-  points(evsi$evppi$k, evsi$evppi$evppi, t = "l", col = col, lty = 1)
+  points(evsi$evi$k, evsi$evi$evppi, t = "l", col = col, lty = 1)
   
   #Choose colours for the different sample sizes
   colours<-colorRampPalette(c("skyblue","blue","darkblue"))(select.length)
