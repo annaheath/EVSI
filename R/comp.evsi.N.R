@@ -608,7 +608,7 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
   #Return EVSI, plus evppi object and bcea object to plot EVSI.
   to.return<-list(beta = beta.mat,
                   N=N.samp,
-                  evppi=evppi,
+                  evppi=evi,
                   he=he)
   class(to.return)<-"evsi.N"
   return(to.return)

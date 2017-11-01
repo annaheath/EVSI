@@ -69,8 +69,8 @@ evsi.calc<-function(comp.evsi.N,wtp=NULL,N=NULL,CI=NULL){
 
   e.full<-(comp.evsi.N$he$delta.e)
   c.full<-(comp.evsi.N$he$delta.c)
-  e.fit<-comp.evsi.N$evi$fitted.effects[,-comp.evsi.N$he$n.comparators]
-  c.fit<-comp.evsi.N$evi$fitted.costs[,-comp.evsi.N$he$n.comparators]
+  e.fit<-comp.evsi.N$evppi$fitted.effects[,-comp.evsi.N$he$n.comparators]
+  c.fit<-comp.evsi.N$evppi$fitted.costs[,-comp.evsi.N$he$n.comparators]
 
   #How to populate the variance matrices
   n.choices<-1

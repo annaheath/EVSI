@@ -120,12 +120,12 @@ launch.App<-function(...){
       #Update inputs based on the EVSI upload
       shiny::updateSelectInput(session,"n",choices=evsi$attrib$N,selected=evsi$attrib$N[round(length(evsi$attrib$N)/2)])
       shiny::updateSelectInput(session,"wtp",choices=round(evsi$attrib$wtp,rounding),
-                               selected=round(evsi$attrib$wtp[which.min((evsi$attrib$wtp-evsi$he$kstar[1])^2)],rounding))
+                               selected=round(evsi$attrib$wtp[max(1, which.min((evsi$attrib$wtp-evsi$he$kstar[1])^2))],rounding))
       shiny::updateSelectInput(session, "n.CE",choices=evsi$attrib$N,
                                selected=evsi$attrib$N[round(length(evsi$attrib$N)/2)])
-      shiny::updateSelectInput(session, "wtp.CE",choices=round(evsi$attrib$wtp,rounding),selected=round(evsi$attrib$wtp[which.min((evsi$attrib$wtp-evsi$he$kstar[1])^2)],rounding))
+      shiny::updateSelectInput(session, "wtp.CE",choices=round(evsi$attrib$wtp,rounding),selected=round(evsi$attrib$wtp[max(1, which.min((evsi$attrib$wtp-evsi$he$kstar[1])^2))],rounding))
       shiny::updateSelectInput(session, "wtp.OS",choices=round(evsi$attrib$wtp,rounding),
-                               selected=round(evsi$attrib$wtp[which.min((evsi$attrib$wtp-evsi$he$kstar[1])^2)],rounding))
+                               selected=round(evsi$attrib$wtp[max(1, which.min((evsi$attrib$wtp-evsi$he$kstar[1])^2))],rounding))
 
     })
     }
@@ -141,12 +141,12 @@ launch.App<-function(...){
       #Update inputs based on the EVSI upload
       shiny::updateSelectInput(session,"n",choices=evsi$attrib$N,selected=evsi$attrib$N[round(length(evsi$attrib$N)/2)])
       shiny::updateSelectInput(session,"wtp",choices=round(evsi$attrib$wtp,rounding),
-                               selected=round(evsi$attrib$wtp[which.min((evsi$attrib$wtp-evsi$he$kstar[1])^2)],rounding))
+                               selected=round(evsi$attrib$wtp[max(1, which.min((evsi$attrib$wtp-evsi$he$kstar[1])^2))],rounding))
       shiny::updateSelectInput(session, "n.CE",choices=evsi$attrib$N,
                                selected=evsi$attrib$N[round(length(evsi$attrib$N)/2)])
-      shiny::updateSelectInput(session, "wtp.CE",choices=round(evsi$attrib$wtp,rounding),selected=round(evsi$attrib$wtp[which.min((evsi$attrib$wtp-evsi$he$kstar[1])^2)],rounding))
+      shiny::updateSelectInput(session, "wtp.CE",choices=round(evsi$attrib$wtp,rounding),selected=round(evsi$attrib$wtp[max(1, which.min((evsi$attrib$wtp-evsi$he$kstar[1])^2))],rounding))
       shiny::updateSelectInput(session, "wtp.OS",choices=round(evsi$attrib$wtp,rounding),
-                               selected=round(evsi$attrib$wtp[which.min((evsi$attrib$wtp-evsi$he$kstar[1])^2)],rounding))
+                               selected=round(evsi$attrib$wtp[max(1, which.min((evsi$attrib$wtp-evsi$he$kstar[1])^2))],rounding))
 
 
     }
@@ -545,13 +545,13 @@ launch.App<-function(...){
                                                                                                                     )),
                                                                                       shiny::fluidRow(
                                                                                         shiny::column(6,shiny::numericInput(inputId="Setupmin",label="Minimum Setup Costs for the Trial",
-                                                                                                                            value=1000,step=10,min=0),
+                                                                                                                            value=150000,step=10,min=0),
                                                                                                       shiny::numericInput(inputId="PerPersmin",label="Minimum Cost Per Person",min=0,
-                                                                                                                          value=1500,step=10)),
+                                                                                                                          value=500,step=10)),
                                                                                         shiny::column(6,shiny::numericInput(inputId="Setupmax",label="Maximum Setup Costs for the Trial",
-                                                                                                                            value=100,step=10,min=0),
+                                                                                                                            value=1500000,step=10,min=0),
                                                                                                       shiny::numericInput(inputId="PerPersmax",label="Maximum Cost Per Person",min=0,
-                                                                                                                          value=1000,step=10)
+                                                                                                                          value=2000,step=10)
                                                                                         ))),
                                                                         shiny::column(5,shiny::fluidRow(shiny::p("The cost-effectiveness of a trial depends on two additional inputs. These are the incidence population, i.e.
                                                                                                                  the yearly incidence of the disease under consideration. This gives the number of patients that will benefit from
@@ -566,7 +566,7 @@ launch.App<-function(...){
                                                                                                                     shiny::numericInput(inputId="Timemin",label="Minimum Time Horizon",value=0,step=1,min=0)),
                                                                                                       shiny::column(6,
                                                                                                                     shiny::numericInput(inputId="Popmax",label="Maximum Incidence Population",value=1e+05,step=100,min=0),
-                                                                                                                    shiny::numericInput(inputId="Timemax",label="Maximum Time Horizon",min=0,value=25,step=1)
+                                                                                                                    shiny::numericInput(inputId="Timemax",label="Maximum Time Horizon",min=0,value=10,step=1)
                                                                                                       ))),
                                                                         shiny::column(2,shiny::p("The final input to determine the cost-effectiveness of the trial is the discount rate for future treatments.
                                                                                                  In general, health benefits now are more valuable than health benefits in the future. NICE recommend 3.5% as the
@@ -746,3 +746,4 @@ launch.App<-function(...){
   suppressWarnings(shiny::shinyApp(ui=ui,server=server))
 
     }
+
