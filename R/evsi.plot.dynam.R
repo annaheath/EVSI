@@ -261,7 +261,7 @@ launch.App<-function(...){
       suppressWarnings(optimal<-optim.ss(evsi,setup,pp,input$Pop.OS,input$Time.OS,Dis=input$Dis,wtp=as.numeric(input$wtp.OS)))
       paste("The optimal sample size for this study is marked by a red triangle on the graph above and is equal to ",
             optimal$SS.max,
-            ". However, any study with the sample size between",
+            ". However, any study with the sample size between ",
             optimal$SS.I[1]," and ",optimal$SS.I[2],
             " has a value within 5% of this optimal value - where this area is marked with the red line on the graph.",sep="")
       
@@ -323,9 +323,9 @@ launch.App<-function(...){
 
     output$Nmax<-shiny::renderText({
       evsi<-evsi()
-      paste("Note that the optimal sample size can only be found between",min(evsi$attrib$N),"and",
+      paste("Note that the optimal sample size can only be found between ",min(evsi$attrib$N)," and ",
             max(evsi$attrib$N),
-            "as these are the boundaries within which the EVSI has been calculated. If the optimal sample size is given as either of these values you will need to recalculate the EVSI for alternative values of N to find the true optimal sample size.",sep="")
+            " as these are the boundaries within which the EVSI has been calculated. If the optimal sample size is given as either of these values you will need to recalculate the EVSI for alternative values of N to find the true optimal sample size.",sep="")
     })
 
 
