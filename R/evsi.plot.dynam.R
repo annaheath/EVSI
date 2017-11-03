@@ -252,22 +252,25 @@ launch.App<-function(...){
     })
 
     #Optimal Sample Size
-    output$SS<-shiny::renderText({
+    output$SS<-shiny::renderUI({
       evsi<-evsi()
       if(is.null(input$Pop.OS)){return(NULL)}
       if(is.null(input$Time.OS)){return(NULL)}
       pp<-as.numeric(c(input$PerPersmin,input$PerPersmax))
       setup<-as.numeric(c(input$Setupmin,input$Setupmax))
       suppressWarnings(optimal<-optim.ss(evsi,setup,pp,input$Pop.OS,input$Time.OS,Dis=input$Dis,wtp=as.numeric(input$wtp.OS)))
-      paste("The optimal sample size for this study is marked by a red triangle on the graph above and is equal to ",
-            optimal$SS.max,
-            ". However, any study with the sample size between ",
-            optimal$SS.I[1]," and ",optimal$SS.I[2],
-            " has a value within 5% of this optimal value - where this area is marked with the red line on the graph.",sep="")
-      
-      
+      shiny::tagList(
+        "The ",tags$b(tags$em("optimal sample size"))," for this study is marked by a red triangle on the graph above and is equal to ",
+        shiny::tags$b(optimal$SS.max),
+        ". However, any study with the sample size between ",
+        shiny::tags$b(optimal$SS.I[1]),
+        " and ",
+        shiny::tags$b(optimal$SS.I[2]),
+        " has a value within 5% of this optimal value - where this area is marked with the red line on the graph."
+      )
     }
     )
+    
 
     #output$SS.min<-shiny::renderText({
     #  evsi<-evsi()
@@ -291,19 +294,20 @@ launch.App<-function(...){
     #  optimal$SS.I[2]
     #}
     #)
-    output$ENBS<-shiny::renderText({
+    output$ENBS<-shiny::renderUI({
       evsi<-evsi()
       if(is.null(input$Pop.OS)){return(NULL)}
       if(is.null(input$Time.OS)){return(NULL)}
       pp<-as.numeric(c(input$PerPersmin,input$PerPersmax))
       setup<-as.numeric(c(input$Setupmin,input$Setupmax))
-
-      
-      paste("At the optimal sample size the Expected Net Benefit of Sampling is equal to ",
-            round(suppressWarnings(optim.ss(evsi,setup,pp,as.numeric(input$Pop.OS),as.numeric(input$Time.OS),Dis=input$Dis,
-                                            wtp=as.numeric(input$wtp.OS))$ENBS),-1),
-      ". If this is greater than 0 then the study has economic benefit, if not then the ENBS demonstrates that the study not cost-effective.",sep="")
+      shiny::tagList(
+        "At the optimal sample size the", tags$b(tags$em("Expected Net Benefit of Sampling")), "is equal to ",
+        tags$b(format(round(suppressWarnings(optim.ss(evsi,setup,pp,as.numeric(input$Pop.OS),as.numeric(input$Time.OS),Dis=input$Dis,
+                                                      wtp=as.numeric(input$wtp.OS))$ENBS),-1)),big.mark=" ",scientific=FALSE),
+        ". If this is greater than 0 then the study has economic benefit, if not then the ENBS demonstrates that the study not cost-effective."
+      )
     })
+    
 
     output$ENBS.plot<-shiny::renderPlot({
       evsi<-evsi()
@@ -321,11 +325,15 @@ launch.App<-function(...){
     #  min(evsi$attrib$N)
     #})
 
-    output$Nmax<-shiny::renderText({
+    output$Nmax<-shiny::renderUI({
       evsi<-evsi()
-      paste("Note that the optimal sample size can only be found between ",min(evsi$attrib$N)," and ",
-            max(evsi$attrib$N),
-            " as these are the boundaries within which the EVSI has been calculated. If the optimal sample size is given as either of these values you will need to recalculate the EVSI for alternative values of N to find the true optimal sample size.",sep="")
+      shiny::tagList(
+        "Note that the optimal sample size can only be found between ",shiny::tags$b(min(evsi$attrib$N)),
+        " and ",
+        shiny::tags$b(max(evsi$attrib$N)),
+        " as these are the boundaries within which the EVSI has been calculated. If the optimal sample size is given as either of 
+        these values you will need to recalculate the EVSI for alternative values of N to find the true optimal sample size."
+      )
     })
 
 
@@ -703,15 +711,15 @@ launch.App<-function(...){
                                                                                                             shiny::uiOutput("Pop.OSDynam"),
                                                                                                             shiny::uiOutput("Time.OSDynam"),
                                                                                                             shiny::p("It is possible to find the sample size for your trial that will give the maximum value for money."),
-                                                                                                            shiny::p(shiny::textOutput(outputId = "Nmax")),
+                                                                                                            shiny::p(shiny::uiOutput(outputId = "Nmax")),
                                                                                                             shiny::p("The plot for the ENBS allows you to assess how the ENBS is behaving for different sample sizes. Please
                                                                                                                      be aware that it is often possible for a large number of sample sizes to have similar economic value and therefore
                                                                                                                      the optimal sample size should be interpreted with care.")
                                                                                                             ,width=4),
 
                                                                                         shiny::mainPanel(shiny::fluidRow(shiny::plotOutput("ENBS.plot"),
-                                                                                                                         shiny::column(5,shiny::p(shiny::textOutput(outputId="SS"))),
-                                                                                                                         shiny::column(7,shiny::p(shiny::textOutput(outputId="ENBS"))),
+                                                                                                                         shiny::column(5,shiny::p(shiny::uiOutput(outputId="SS"))),
+                                                                                                                         shiny::column(7,shiny::p(shiny::uiOutput(outputId="ENBS"))),
                                                                                                                          width=8))
                                                                                                                          )
           ))
