@@ -84,9 +84,11 @@ plot.evsi<-function(evsi,pos=c(0,0.8),N=NULL){
   
   if(select.length==1){  legend(alt.legend, c("EVPI", "EVPPI for focal parameters",paste("EVSI for sample size of",N)),
                                 col = c("black", "black",colours),
-                                cex = 0.7, bty = "n", lty = c(1, 1,1),
+                                cex = 0.7,box.lwd = 0,box.col = "white",bg = "white", lty = c(1, 1,1),
                                 lwd = c(2, 1))}
   if(select.length>1){legend(alt.legend,legend=c(min(N),rep(NA,max(0,select.length-2)),max(N)),
                              fill=colours,border=colours,cex=0.75,
-                             y.intersp=max(0.1,1.2/select.length),bty="n")}
+                             y.intersp=max(0.1,1.2/select.length),
+                             box.lwd = 0,box.col = "white",bg = "white")}
+  box()
 }
