@@ -410,13 +410,13 @@ launch.App<-function(...){
                                                  shiny::h3("Willingness to Pay"),
                                                  shiny::p("The willingness to pay (WTP) is the amount of money the decision maker has avaliable to pay for an
                                                           additional 1 unit of benefit. This is typically given as a range and therefore the EVSI can be visualised
-                                                          across different WTP values in the tab WTP. For the other analyses the WTP must be fixed. Although the plots
+                                                          across different WTP values in the tab EVSI by Willingness-to-Pay. For the other analyses the WTP must be fixed. Although the plots
                                                           can easily be redrawn for different values of the WTP allowing the analysis to be easily completed for a
                                                           large number of different thresholds."),
                                                  shiny::h3("Sample Size"),
                                                  shiny::p("The sample size of the future trial is rarely determined before the EVSI analysis and one of the analysis
                                                           avaliable in this tool involves determining the optimal sample size for the future trial. The EVSI can be
-                                                          visualised by sample size on the tab N. The value of a sample is bounded above by the value of resolving
+                                                          visualised by sample size on the tab EVSI by Sample Size. The value of a sample is bounded above by the value of resolving
                                                           all uncertainty in the parameters of interest. The key information to be gleaned from the by N plot is the
                                                           speed at which the EVSI reachs this upper bound."),
                                                  shiny::h3("Trial Cost-effectivenes"),
@@ -477,13 +477,13 @@ launch.App<-function(...){
                                                  shiny::h3("Willingness to Pay"),
                                                  shiny::p("The willingness to pay (WTP) is the amount of money the decision maker has avaliable to pay for an
                                                           additional 1 unit of benefit. This is typically given as a range and therefore the EVSI can be visualised
-                                                          across different WTP values in the tab WTP. For the other analyses the WTP must be fixed. Although the plots
+                                                          across different WTP values in the tab EVSI by Willingness-to-Pay. For the other analyses the WTP must be fixed. Although the plots
                                                           can easily be redrawn for different values of the WTP allowing the analysis to be easily completed for a
                                                           large number of different thresholds."),
                                                  shiny::h3("Sample Size"),
                                                  shiny::p("The sample size of the future trial is rarely determined before the EVSI analysis and one of the analysis
                                                           avaliable in this tool involves determining the optimal sample size for the future trial. The EVSI can be
-                                                          visualised by sample size on the tab N. The value of a sample is bounded above by the value of resolving
+                                                          visualised by sample size on the tab EVSI by Sample Size. The value of a sample is bounded above by the value of resolving
                                                           all uncertainty in the parameters of interest. The key information to be gleaned from the by N plot is the
                                                           speed at which the EVSI reachs this upper bound."),
                                                  shiny::h3("Trial Cost-effectivenes"),
