@@ -197,5 +197,6 @@ evsi.pop<-function(evsi,trial.cost=NULL,setup=NULL,pp=NULL,
 
   legend(alt.legend,c("Prob=0",rep(NA,98/2),"Prob=.5",rep(NA,96/2),"Prob=1"),fill=colours,border=colours,cex=0.75,y.intersp=0.15,
          box.lwd = 0,box.col = "white",bg = "white")
+  box()
 
 }

@@ -98,5 +98,6 @@ plot.evsi.N<-function(evsi,wtp=NULL,pos=c("bottomright"),CI=NULL){
   legend(alt.legend,c(as.character(CI),"EVPPI"),
          col=c(rep("black",CI.length),"springgreen"),lwd=lwd,lty=lty,
          box.lwd = 0,box.col = "white",bg = "white")
+  box()
 
 }
