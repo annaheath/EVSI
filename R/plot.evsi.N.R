@@ -96,6 +96,7 @@ plot.evsi.N<-function(evsi,wtp=NULL,pos=c("bottomright"),CI=NULL){
   abline(h=mean(apply(fitted.PI,1,max))-max(apply(fitted.PI,2,mean)),col="springgreen",lwd=lwd[CI.length+1],lty=lty[CI.length+1])
 
   legend(alt.legend,c(as.character(CI),"EVPPI"),
-         col=c(rep("black",CI.length),"springgreen"),lwd=lwd,lty=lty)
+         col=c(rep("black",CI.length),"springgreen"),lwd=lwd,lty=lty,
+         box.lwd = 0,box.col = "white",bg = "white")
 
 }
