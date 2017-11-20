@@ -595,7 +595,7 @@ launch.App<-function(...){
                         )
       }
       CE.panel.multi.N<-{
-        shiny::tabPanel("Cost-effectiveness of a Trial",style='width:80%',
+        shiny::tabPanel("Value-for-Money from a Trial",style='width:80%',
             shiny::column(12,
                   shiny::tabsetPanel(id="CE",
                         #Set up Panel
@@ -727,7 +727,7 @@ launch.App<-function(...){
         
       }
       CE.panel.single.N<-{
-        shiny::tabPanel("Cost-effectiveness of a Trial",style='width:80%',
+        shiny::tabPanel("Value-for-Money from a Trial",style='width:80%',
                         shiny::column(12,
                               shiny::tabsetPanel(id="CE",
                                                  shiny::tabPanel("Setup",
