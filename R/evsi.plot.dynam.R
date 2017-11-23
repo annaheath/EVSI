@@ -427,8 +427,8 @@ launch.App<-function(...){
                                                           visualised by sample size on the tab EVSI by Sample Size. The value of a sample is bounded above by the value of resolving
                                                           all uncertainty in the parameters of interest. The key information to be gleaned from the by N plot is the
                                                           speed at which the EVSI reachs this upper bound."),
-                                                 shiny::h3("Trial Cost-effectivenes"),
-                                                 shiny::p("A key use of the EVSI is to determine whether a future trial will be cost-effective. This means that the
+                                                 shiny::h3("Value-for-Money from a trial"),
+                                                 shiny::p("A key use of the EVSI is to determine whether a future trial will be give value for money. This means that the
                                                           value of the future trial exceeds the cost of the trial. While in general this is a simple extension of the
                                                           ideas underpinning the EVSI, it typically depends on some additional inputs which are rarely known with
                                                           certainty.")),
@@ -436,18 +436,18 @@ launch.App<-function(...){
                                           tags$li(shiny::p("Trial costs"),
                                                       shiny::p("The cost of the trial must be specified to allow comparison with the EVSI. However, these are rarely known
                                                                with certainty and so this application allows a range of values to be specified for the cost and then
-                                                               considers the cost-effectiveness of the trial taking into account this uncertainty.")),
+                                                               considers whether a trial gives value-for-money while taking this uncertainty into account.")),
                                                       tags$li(shiny::p("Incidence Population"),
                                                       shiny::p("The EVSI is calculated as the EVSI per person who will benefit from the treatments under consideration.
                                                                Therefore, to compare with the trial costs, we must multiply by the number of people who will benefit
                                                                from the treatments. We call this the \"Incidence Population\". While there may be some literature that
                                                                can inform this parameter it cannot be known and therefore the cost-effectiveness of the trial is determined
                                                                for different levels of this population. This is an important consideration as the level of this population
-                                                               can make a large difference to the cost-effectiveness of the trial.")),
+                                                               can make a difference to whether trial offers value-for-money.")),
                                                       tags$li(shiny::p("Time Horizon"),
                                                       shiny::p("Finally, the time horizon of a treatment is the length of time the treatments will be available in the
                                                                market before an alternative superseeds the treatments by being more cost-effective. Typically, this is
-                                                               assumed to be around 10 years but we allow variation in this parameter to consider the cost-effectiveness
+                                                               assumed to be around 10 years but we allow variation in this parameter to consider the value-for-money from the trial
                                                                for alternative time horizons. This is powerful as it is rarely known the length of time a technology will
                                                                be available in the market."))),
                                                       actionButton("Reload","Reset Data")),
@@ -494,8 +494,8 @@ launch.App<-function(...){
                                                           visualised by sample size on the tab EVSI by Sample Size. The value of a sample is bounded above by the value of resolving
                                                           all uncertainty in the parameters of interest. The key information to be gleaned from the by N plot is the
                                                           speed at which the EVSI reachs this upper bound."),
-                                                 shiny::h3("Trial Cost-effectivenes"),
-                                                 shiny::p("A key use of the EVSI is to determine whether a future trial will be cost-effective. This means that the
+                                                 shiny::h3("Value-for-Money from a trial"),
+                                                 shiny::p("A key use of the EVSI is to determine whether a future trial will be give value for money. This means that the
                                                           value of the future trial exceeds the cost of the trial. While in general this is a simple extension of the
                                                           ideas underpinning the EVSI, it typically depends on some additional inputs which are rarely known with
                                                           certainty.")),
@@ -503,18 +503,18 @@ launch.App<-function(...){
                                           tags$li(shiny::p("Trial costs"),
                                                   shiny::p("The cost of the trial must be specified to allow comparison with the EVSI. However, these are rarely known
                                                            with certainty and so this application allows a range of values to be specified for the cost and then
-                                                           considers the cost-effectiveness of the trial taking into account this uncertainty.")),
+                                                           considers whether a trial gives value-for-money while taking this uncertainty into account.")),
                                           tags$li(shiny::p("Incidence Population"),
                                                   shiny::p("The EVSI is calculated as the EVSI per person who will benefit from the treatments under consideration.
                                                            Therefore, to compare with the trial costs, we must multiply by the number of people who will benefit
                                                            from the treatments. We call this the \"Incidence Population\". While there may be some literature that
                                                            can inform this parameter it cannot be known and therefore the cost-effectiveness of the trial is determined
                                                            for different levels of this population. This is an important consideration as the level of this population
-                                                           can make a large difference to the cost-effectiveness of the trial.")),
+                                                           can make a difference to whether trial offers value-for-money.")),
                                           tags$li(shiny::p("Time Horizon"),
                                                   shiny::p("Finally, the time horizon of a treatment is the length of time the treatments will be available in the
                                                            market before an alternative superseeds the treatments by being more cost-effective. Typically, this is
-                                                           assumed to be around 10 years but we allow variation in this parameter to consider the cost-effectiveness
+                                                           assumed to be around 10 years but we allow variation in this parameter to consider the value-for-money from the trial
                                                            for alternative time horizons. This is powerful as it is rarely known the length of time a technology will
                                                            be available in the market."))),
                                         shiny::p("References: Raiffa, H. and Schlaifer, R.,",
@@ -602,10 +602,10 @@ launch.App<-function(...){
                         shiny::tabPanel("Setup",
                                   shiny::fluidRow(
                                      shiny::sidebarPanel({
-                                       shiny::p("A trial is const-effective if the value of information gained from the trial exceeds the cost of undertaking the trial.
-                                                Therefore, to determine whether the proposed trial is cost-effective we must first determine the cost of the trial under consideration.
-                                                This tab allows you to specify key characteristics of the trial so the cost-effectiveness of the trial can be ascertained.
-                                                The following tabs display the cost-effectiveness of the trial graphically and, if the EVSI has been calculated for different sample sizes,
+                                       shiny::p("A trial gives value-for-money if the value of information gained from the trial exceeds the cost of undertaking the trial.
+                                                Therefore, to determine whether the proposed trial gives value-for-money we must first determine the cost of the trial under consideration.
+                                                This tab allows you to specify key characteristics of the trial so the value-for-money from the trial can be ascertained.
+                                                The following tabs display the  value-for-money from the trial graphically and, if the EVSI has been calculated for different sample sizes,
                                                 allows you to determine the optimal sample size of the trial. For more information about decision making using the EVSI in clinical trials,
                                                 see the references below.")}),
                                           shiny::mainPanel({
@@ -631,10 +631,10 @@ launch.App<-function(...){
                                                                             )))
                                                                         ,
                                                  shiny::tabPanel("Long Term Dynamics",
-                                                     shiny::fluidRow(shiny::p("The cost-effectiveness of a trial depends on two additional inputs. These are the incidence population, i.e.
+                                                     shiny::fluidRow(shiny::p("The value-for-money from a trial depends on two additional inputs. These are the incidence population, i.e.
                                                                               the yearly incidence of the disease under consideration. This gives the number of patients that will benefit from
                                                                                                                the treatment in each year that the treatment is used. This may not be known with certainty and the plot considers
-                                                                                                               the cost-effectiveness of the trial for different possible numbers of patients. However, it is necessary to give
+                                                                                                               the value-for-money from the trial for different possible numbers of patients. However, it is necessary to give
                                                                                                                possible values of the incidence population."),
                                                                      shiny::p("The time horizon gives the number of years that before a more effective/efficient treatment will enter the market.
                                                                                                                This can be thought of as the number of years before a more effective treatment will be developed.
@@ -656,7 +656,7 @@ launch.App<-function(...){
                                                                                                                shiny::em(", Medical Decision Making"),", 2011"))
                                                                                       ),
                                                  shiny::tabPanel("Discount Rate",
-                                                          shiny::fluidRow(shiny::p("The final input to determine the cost-effectiveness of the trial is the discount rate for future treatments.
+                                                          shiny::fluidRow(shiny::p("The final input to determine the value-for-money from the trial is the discount rate for future treatments.
                                                                                                  In general, health benefits now are more valuable than health benefits in the future. NICE recommend 3.5% as the
                                                                                                discount rate for the treatments but this can be changed here."),
                                                            shiny::numericInput(inputId="Dis",label="Discount Rate",
@@ -678,7 +678,7 @@ launch.App<-function(...){
                                                                                                       )})
                         ),
                         #Cost-effective Trial
-                        shiny::tabPanel("Probability of CE Trial",
+                        shiny::tabPanel("Probability of Positive Trial Value",
                                                                                         shiny::fluidRow(shiny::sidebarPanel(#Population EVSI - prob of CE plot
                                                                                           shiny::selectInput(inputId="n.CE",label="Choose a sample size",
                                                                                                              choices=NULL,selected=NULL),
@@ -688,11 +688,12 @@ launch.App<-function(...){
                                                                                           shiny::uiOutput("TimeDynam"),width=4),
                                                                                           shiny::mainPanel(shiny::plotOutput(outputId="ProbCE"),
                                                                                                            width=8)),
-                                                                                        shiny::fluidRow(shiny::column(12,shiny::p("The probability of having a cost effective trial is shown for different time horizons and incidence
-                                                                                                                                  populations. The plot is",shiny::em("white"),"when the trial is cost-effective and",shiny::em("black"),"when the trial
-                                                                                                                                  is not cost-effective. A trial is more likely to be cost effective as the time horizon and incidence
+                                                                                        shiny::fluidRow(shiny::column(12,shiny::p("The probability of getting value-for-money from the trial is shown for different time horizons and incidence
+                                                                                                                                  populations. The plot is",shiny::em("white"),"when the trial is Expected Net Benefit of Sampling is positive and",
+                                                                                                                                  shiny::em("black"),"when the trial
+                                                                                                                                  gives no value-for-money. A trial is more likely to give value-for-money as the time horizon and incidence
                                                                                                                                   population increases and therefore the plot will typically be white in the top right hand corner."),
-                                                                                                                      shiny::p("A trial is",shiny::em("cost-effective"),"when the expected value of the information gained in the trial
+                                                                                                                      shiny::p("A trial gives",shiny::em("value-for-money"),"when the expected value of the information gained in the trial
                                                                                                                                is greater than the trial costs. As both the trial costs and the EVSI are not known with certainty
                                                                                                                                there are some values for the time horizon and incidence population where the costs of the trial could
                                                                                                                                exceed the value but it is uncertain whether this will be the case. In these settings, the plot is
@@ -733,23 +734,24 @@ launch.App<-function(...){
                                                  shiny::tabPanel("Setup",
                                                                  shiny::fluidRow(
                                                                    shiny::sidebarPanel({
-                                                                     shiny::p("A trial is const-effective if the value of information gained from the trial exceeds the cost of undertaking the trial.
-                                                                              Therefore, to determine whether the proposed trial is cost-effective we must first determine the cost of the trial under consideration.
-                                                                              This tab allows you to specify key characteristics of the trial so the cost-effectiveness of the trial can be ascertained.
-                                                                              The following tabs display the cost-effectiveness of the trial graphically and, if the EVSI has been calculated for different sample sizes,
+                                                                     shiny::p("A trial gives value-for-money if the value of information gained from the trial exceeds the cost of undertaking the trial.
+                                                                              Therefore, to determine whether the proposed trial gives value-for-money we must first determine the cost of the trial under consideration.
+                                                                              This tab allows you to specify key characteristics of the trial so the value-for-money from the trial can be ascertained.
+                                                                              The following tabs display the  value-for-money from the trial graphically and, if the EVSI has been calculated for different sample sizes,
                                                                               allows you to determine the optimal sample size of the trial. For more information about decision making using the EVSI in clinical trials,
                                                                               see the references below.")}),
                                                                    shiny::mainPanel({
                                                                      shiny::tabsetPanel(id="set",
                                                                                         shiny::tabPanel("Trial Costs",
-                                                                                                        shiny::fluidRow(shiny::p("In general, trial costs are split into two categories; the setup and the per person costs.
-                                                                                                                                 The are setup costs are the overhead costs of the trial and will be incurred irrespective of the size
-                                                                                                                                 of the trial. Typical setup costs may be training for staff or the purchase of specialised equipment.
-                                                                                                                                 Additional costs will then be incurred for each participant enrolled in the trial such as the cost of
-                                                                                                                                 administering the treatment or following up the patient."),
-                                                                                                                        shiny::p("In most settings, these two costs will not be known with certainty. Therefore, you should give a range of possible
-                                                                                                                                 values for these costs. If the costs are known with certainty then simply input the same values for
-                                                                                                                                 the maximum and minimum possible values of the costs. ")),
+                                                                                                        shiny::fluidRow(shiny::p("The value-for-money from a trial depends on two additional inputs. These are the incidence population, i.e.
+                                                                              the yearly incidence of the disease under consideration. This gives the number of patients that will benefit from
+                                                                                                                                 the treatment in each year that the treatment is used. This may not be known with certainty and the plot considers
+                                                                                                                                 the value-for-money from the trial for different possible numbers of patients. However, it is necessary to give
+                                                                                                                                 possible values of the incidence population."),
+                                                                                                                        shiny::p("The time horizon gives the number of years that before a more effective/efficient treatment will enter the market.
+                                                                                                                                 This can be thought of as the number of years before a more effective treatment will be developed.
+                                                                                                                                 This will depend on the disease areas as fast moving diseases such as cancer will have a shorter time
+                                                                                                                                 horizon. The maximum and minimum possible values for the time horizon should be specified here.")),
                                                                                                         shiny::fluidRow(
                                                                                                           shiny::column(4,shiny::numericInput(inputId="Setupmin",label="Minimum Setup Costs for the Trial",
                                                                                                                                               value=150000,step=10,min=0),
@@ -762,10 +764,10 @@ launch.App<-function(...){
                                                                                                           )))
                                                                                         ,
                                                                                         shiny::tabPanel("Long Term Dynamics",
-                                                                                                        shiny::fluidRow(shiny::p("The cost-effectiveness of a trial depends on two additional inputs. These are the incidence population, i.e.
-                                                                                                                                 the yearly incidence of the disease under consideration. This gives the number of patients that will benefit from
+                                                                                                        shiny::fluidRow(shiny::p("The value-for-money from a trial depends on two additional inputs. These are the incidence population, i.e.
+                                                                              the yearly incidence of the disease under consideration. This gives the number of patients that will benefit from
                                                                                                                                  the treatment in each year that the treatment is used. This may not be known with certainty and the plot considers
-                                                                                                                                 the cost-effectiveness of the trial for different possible numbers of patients. However, it is necessary to give
+                                                                                                                                 the value-for-money from the trial for different possible numbers of patients. However, it is necessary to give
                                                                                                                                  possible values of the incidence population."),
                                                                                                                         shiny::p("The time horizon gives the number of years that before a more effective/efficient treatment will enter the market.
                                                                                                                                  This can be thought of as the number of years before a more effective treatment will be developed.
@@ -787,8 +789,8 @@ launch.App<-function(...){
                                                                                                                                  shiny::em(", Medical Decision Making"),", 2011"))
                                                                                                         ),
                                                                                         shiny::tabPanel("Discount Rate",
-                                                                                                        shiny::fluidRow(shiny::p("The final input to determine the cost-effectiveness of the trial is the discount rate for future treatments.
-                                                                                                                                 In general, health benefits now are more valuable than health benefits in the future. NICE recommend 3.5% as the
+                                                                                                        shiny::fluidRow(shiny::p("The final input to determine the value-for-money from the trial is the discount rate for future treatments.
+                                                                                                 In general, health benefits now are more valuable than health benefits in the future. NICE recommend 3.5% as the
                                                                                                                                  discount rate for the treatments but this can be changed here."),
                                                                                                                         shiny::numericInput(inputId="Dis",label="Discount Rate",
                                                                                                                                             value=0.035,step=0.001),
@@ -808,7 +810,7 @@ launch.App<-function(...){
                                                                                                          shiny::em(", Medical Decision Making"),", 2008") 
                                                                  )})
                                                                    ),
-                                                                                         shiny::tabPanel("Probability of CE Trial",
+                                                                                         shiny::tabPanel("Probability of Positive Trial Value",
                                                                                                          shiny::fluidRow(shiny::sidebarPanel(#Population EVSI - prob of CE plot
                                                                                                            shiny::selectInput(inputId="n.CE",label="Choose a sample size",
                                                                                                                               choices=NULL,selected=NULL),
@@ -818,11 +820,12 @@ launch.App<-function(...){
                                                                                                            shiny::uiOutput("TimeDynam"),width=4),
                                                                                                            shiny::mainPanel(shiny::plotOutput(outputId="ProbCE"),
                                                                                                                             width=8)),
-                                                                                                         shiny::fluidRow(shiny::column(12,shiny::p("The probability of having a cost effective trial is shown for different time horizons and incidence
-                                                                                                                                                   populations. The plot is",shiny::em("white"),"when the trial is cost-effective and",shiny::em("black"),"when the trial
-                                                                                                                                                   is not cost-effective. A trial is more likely to be cost effective as the time horizon and incidence
+                                                                                                         shiny::fluidRow(shiny::column(12,shiny::p("The probability of getting value-for-money from the trial is shown for different time horizons and incidence
+                                                                                                                                  populations. The plot is",shiny::em("white"),"when the trial is Expected Net Benefit of Sampling is positive and",
+                                                                                                                                                   shiny::em("black"),"when the trial
+                                                                                                                                                   gives no value-for-money. A trial is more likely to give value-for-money as the time horizon and incidence
                                                                                                                                                    population increases and therefore the plot will typically be white in the top right hand corner."),
-                                                                                                                                       shiny::p("A trial is",shiny::em("cost-effective"),"when the expected value of the information gained in the trial
+                                                                                                                                       shiny::p("A trial gives",shiny::em("value-for-money"),"when the expected value of the information gained in the trial
                                                                                                                                                 is greater than the trial costs. As both the trial costs and the EVSI are not known with certainty
                                                                                                                                                 there are some values for the time horizon and incidence population where the costs of the trial could
                                                                                                                                                 exceed the value but it is uncertain whether this will be the case. In these settings, the plot is
