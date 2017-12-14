@@ -303,6 +303,18 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
           y<-e.var-pre.var.e
         }
 
+        if(sd(y)==0){
+          data.a.b<-list(sigma.mu=sd(y)/2,
+                         sigma.tau=100,
+                         N=length(N.samp),
+                         shape.Nmax=0.0005/max(N.samp),
+                         var.PI=as.matrix(e.fit.var)[i,j],
+                         Nmax=max(N.samp),
+                         y=as.vector(y),
+                         x=as.vector(N.samp)
+          )
+        }
+        if(sd(y)!=0){
         data.a.b<-list(sigma.mu=sd(y)/2,
                        sigma.tau=1/sd(y),
                        N=length(N.samp),
@@ -312,7 +324,7 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
                        y=as.vector(y),
                        x=as.vector(N.samp)
         )
-
+        }
         Model.JAGS<- rjags::jags.model(file.curve.fitting,data=data.a.b,quiet=TRUE)
         update(Model.JAGS,n.burnin,progress.bar="none")
         beta.ab <- rjags::coda.samples(Model.JAGS, c("beta"), n.iter=n.iter,n.thin=n.thin,progress.bar="none")
@@ -336,15 +348,29 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
           y<-c.var-pre.var.c
         }
 
-        data.a.b<-list(sigma.mu=sd(y)/2,
-                       sigma.tau=1/sd(y),
-                       N=length(N.samp),
-                       shape.Nmax=0.0005/max(N.samp),
-                       var.PI=as.matrix(c.fit.var)[i,j],
-                       Nmax=max(N.samp),
-                       y=as.vector(y),
-                       x=as.vector(N.samp)
-        )
+        
+        if(sd(y)==0){
+          data.a.b<-list(sigma.mu=sd(y)/2,
+                         sigma.tau=100,
+                         N=length(N.samp),
+                         shape.Nmax=0.0005/max(N.samp),
+                         var.PI=as.matrix(e.fit.var)[i,j],
+                         Nmax=max(N.samp),
+                         y=as.vector(y),
+                         x=as.vector(N.samp)
+          )
+        }
+        if(sd(y)!=0){
+          data.a.b<-list(sigma.mu=sd(y)/2,
+                         sigma.tau=1/sd(y),
+                         N=length(N.samp),
+                         shape.Nmax=0.0005/max(N.samp),
+                         var.PI=as.matrix(e.fit.var)[i,j],
+                         Nmax=max(N.samp),
+                         y=as.vector(y),
+                         x=as.vector(N.samp)
+          )
+        }
 
         Model.JAGS<- rjags::jags.model(file.curve.fitting,data=data.a.b,quiet=TRUE)
         update(Model.JAGS,n.burnin,progress.bar="none")
@@ -506,7 +532,7 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
     ##### GB: Need to define the variables var.PI and x, or else when compiling the package R will throw a message for no-bindings
     var.PI=x=NULL
     #####
-    #Write the Model - remove need for R2OpenBUGS so can run with just JAGS.
+    #Write the Model
     model.ab<-c("model
                 {
                 beta ~ dnorm(Nmax, shape.Nmax)  I(0.00000E+00, )
@@ -551,21 +577,35 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
 
         y<-t(e.var[i,j]-pre.var.e[i,j])
 
-        data.a.b<-list(sigma.mu=sd(y)/2,
-                       sigma.tau=1/sd(y),
-                       N=length(N.samp),
-                       shape.Nmax=0.0005/max(N.samp),
-                       var.PI=e.fit.var[i,j],
-                       Nmax=max(N.samp),
-                       y=as.vector(y),
-                       x=as.vector(N.samp)
-        )
+        
+        if(sd(y)==0){
+          data.a.b<-list(sigma.mu=sd(y)/2,
+                         sigma.tau=100,
+                         N=length(N.samp),
+                         shape.Nmax=0.0005/max(N.samp),
+                         var.PI=as.matrix(e.fit.var)[i,j],
+                         Nmax=max(N.samp),
+                         y=as.vector(y),
+                         x=as.vector(N.samp)
+          )
+        }
+        if(sd(y)!=0){
+          data.a.b<-list(sigma.mu=sd(y)/2,
+                         sigma.tau=1/sd(y),
+                         N=length(N.samp),
+                         shape.Nmax=0.0005/max(N.samp),
+                         var.PI=as.matrix(e.fit.var)[i,j],
+                         Nmax=max(N.samp),
+                         y=as.vector(y),
+                         x=as.vector(N.samp)
+          )
+        }
 
-        Model.JAGS<- rjags::jags.model(file.curve.fitting,data=data.a.b,quiet=TRUE)
-        update(Model.JAGS,n.burnin,progress.bar="none")
-        beta.ab <- rjags::coda.samples(Model.JAGS, c("beta"), n.iter=n.iter,n.thin=n.thin,progress.bar="none")
+        beta.ab<- R2OpenBUGS::bugs(data.a.b,inits=NULL,parameters.to.save=c("beta"),
+                                      model.file=file.curve.fitting, n.burnin=n.burnin,n.iter=n.iter+n.burnin,n.thin=n.thin,n.chains=1,
+                                      DIC=FALSE,debug=FALSE)
 
-        beta.mat[,1,n.entry]<-as.data.frame(beta.ab[[1]])[,1]
+        beta.mat[,1,n.entry]<-as.data.frame(beta.ab$sims.matrix)[,1]
         n.entry<-n.entry+1
       }
     }
@@ -584,21 +624,34 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
           y<-c.var-pre.var.c
         }
 
-        data.a.b<-list(sigma.mu=sd(y)/2,
-                       sigma.tau=1/sd(y),
-                       N=length(N.samp),
-                       shape.Nmax=0.0005/max(N.samp),
-                       var.PI=c.fit.var[i,j],
-                       Nmax=max(N.samp),
-                       y=as.vector(y),
-                       x=as.vector(N.samp)
-        )
-
-        Model.JAGS<- rjags::jags.model(file.curve.fitting,data=data.a.b,quiet=TRUE)
-        update(Model.JAGS,n.burnin,progress.bar="none")
-        beta.ab <- rjags::coda.samples(Model.JAGS, c("beta"), n.iter=n.iter,n.thin=n.thin,progress.bar="none")
-
-        beta.mat[,2,n.entry]<-as.data.frame(beta.ab[[1]])[,1]
+        
+        if(sd(y)==0){
+          data.a.b<-list(sigma.mu=sd(y)/2,
+                         sigma.tau=100,
+                         N=length(N.samp),
+                         shape.Nmax=0.0005/max(N.samp),
+                         var.PI=as.matrix(e.fit.var)[i,j],
+                         Nmax=max(N.samp),
+                         y=as.vector(y),
+                         x=as.vector(N.samp)
+          )
+        }
+        if(sd(y)!=0){
+          data.a.b<-list(sigma.mu=sd(y)/2,
+                         sigma.tau=1/sd(y),
+                         N=length(N.samp),
+                         shape.Nmax=0.0005/max(N.samp),
+                         var.PI=as.matrix(e.fit.var)[i,j],
+                         Nmax=max(N.samp),
+                         y=as.vector(y),
+                         x=as.vector(N.samp)
+          )
+        }
+        beta.ab<- R2OpenBUGS::bugs(data.a.b,inits=NULL,parameters.to.save=c("beta"),
+                                   model.file=file.curve.fitting, n.burnin=n.burnin,n.iter=n.iter+n.burnin,n.thin=n.thin,n.chains=1,
+                                   DIC=FALSE,debug=FALSE)
+        
+        beta.mat[,1,n.entry]<-as.data.frame(beta.ab$sims.matrix)[,1]
         n.entry<-n.entry+1
       }
     }
