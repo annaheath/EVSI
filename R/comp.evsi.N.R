@@ -83,7 +83,9 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
     inputs<-sample[,moniter[jags.params]]
 
     #Matrix Parameters
-    multiple.params<-moniter[-jags.params]
+    if(length(jags.params)!=0){
+    multiple.params<-moniter[-jags.params]}
+    else{multiple.params<-moniter}
 
     #Function to extract the matrix parameters from the jags object
     multiple.params.extract<-function(multi.params){
@@ -91,7 +93,7 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
       else{
         list.params<-list()
         length(list.params)<-length(multi.params)
-        for(j in 1:length(multiple.params)){
+        for(j in 1:length(multi.params)){
           list.params[j]<-list(as.numeric(sample[i,grep(multi.params[j],names(sample))]))
         }
         return(list.params)}
@@ -109,7 +111,8 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
   quantiles<-sample((1:Q)/(Q+1),replace=F)
   if(length(N.range)==2){N.samp<-trunc((seq(sqrt(N.range[1]),sqrt(N.range[2]),length.out = Q))^2)}
   if(length(N.range)>2){N.samp<-N.range}
-
+  while(abs(cor(quantiles,N.samp))>0.0005){quantiles<-sample(quantiles,Q,replace=FALSE)}
+  
   #Generate future samples by finding prior-predictive distribution
   if(update=="jags"){#Model can be written in jags.
     if(!isTRUE(requireNamespace("rjags",quietly=TRUE))) {
@@ -150,9 +153,14 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
         length.data<-length(unlist(index.data))
         names.data<-data
         Data.Fut<-array()
+        #Selecting one row of the data? DOES THIS MAKE SENSE?? 
+        #Find the quantile of one of the data points, then select the row with that...
+        index.pp<-sample(unlist(index.data),1)
+        index.choose<-which(PP.sample[,unlist(index.data)[index.pp]]==quantile(PP.sample[,unlist(index.data)[index.pp]],
+                                                                               probs=quantiles[q],type=3))
         for(d in 1:length.data){
           #Creating list of the future data to give to jags
-          Data.Fut[unlist(index.data)[d]]<-as.numeric(quantile(PP.sample[,unlist(index.data)[d]],probs=quantiles[q],type=3))
+          Data.Fut[unlist(index.data)[d]]<-as.numeric(PP.sample[index.choose,unlist(index.data)[d]])
         }
         Data.Fut.list<-list()
         for(d in 1:length(index.data)){
@@ -424,9 +432,14 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
         length.data<-length(unlist(index.data))
         names.data<-data
         Data.Fut<-array()
+        #Selecting one row of the data? DOES THIS MAKE SENSE?? 
+        #Find the quantile of one of the data points, then select the row with that...
+        index.pp<-sample(unlist(index.data),1)
+        index.choose<-which(PP.sample[,unlist(index.data)[index.pp]]==quantile(PP.sample[,unlist(index.data)[index.pp]],
+                                                                               probs=quantiles[q],type=3))
         for(d in 1:length.data){
           #Creating list of the future data to give to jags
-          Data.Fut[unlist(index.data)[d]]<-as.numeric(quantile(PP.sample[,unlist(index.data)[d]],probs=quantiles[q],type=3))
+          Data.Fut[unlist(index.data)[d]]<-as.numeric(PP.sample[index.choose,unlist(index.data)[d]])
         }
         Data.Fut.list<-list()
         for(d in 1:length(index.data)){
