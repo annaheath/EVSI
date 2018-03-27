@@ -126,7 +126,9 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
     prior.pred.data<-unique(moniter)
     #Track both the data and the parameters of interest if either are needed.
     if(cl.dat=="character"){prior.pred.data <-unique(c(prior.pred.data,data))}
-    if(length(parameters)!=0){prior.pred.data<-unique(c(prior.pred.data,parameters))}
+    if(class(evi)=="evppi"){parameters<-evi$index}
+    prior.pred.data<-unique(c(prior.pred.data,parameters))
+
 
     ####Calculate EVSI by Quadrature####
     var.prepost<-list()
@@ -150,14 +152,17 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
         for(l in 1:length(data)){
           index.data[[l]]<-grep(data[l],colnames(PP.sample))
         }
+        index.params<-list()
+        for(l in 1:length(parameters)){
+          index.params[[l]]<-which(colnames(PP.sample)==parameters[l])
+        }
         length.data<-length(unlist(index.data))
         names.data<-data
         Data.Fut<-array()
-        #Selecting one row of the data? DOES THIS MAKE SENSE?? 
-        #Find the quantile of one of the data points, then select the row with that...
-        index.pp<-sample(unlist(index.data),1)
-        index.choose<-which(PP.sample[,unlist(index.data)[index.pp]]==quantile(PP.sample[,unlist(index.data)[index.pp]],
-                                                                               probs=quantiles[q],type=3))
+        #Selecting one row of the parameters of interest
+        #Find the quantile of one of the parameters of interest, then select the row with that...
+        index.pp<-sample(unlist(index.params),1)
+        index.choose<-which(PP.sample[,index.pp]==quantile(PP.sample[,index.pp],probs=quantiles[q],type=3))
         for(d in 1:length.data){
           #Creating list of the future data to give to jags
           Data.Fut[unlist(index.data)[d]]<-as.numeric(PP.sample[index.choose,unlist(index.data)[d]])
@@ -400,12 +405,13 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
     }
     #Defines the model parameters that are required to calculate the costs and effects
     moniter<-names(which(sapply(nameofinterest,grep.fun,main=readLines(model.stats))>0))
-
+    
     #Track all the variables of interest
     prior.pred.data<-unique(moniter)
     #Track both the data and the parameters of interest if either are needed.
     if(cl.dat=="character"){prior.pred.data <-unique(c(prior.pred.data,data))}
-    if(length(parameters)!=0){prior.pred.data<-unique(c(prior.pred.data,parameters))}
+    if(class(evi)=="evppi"){parameters<-evi$index}
+    prior.pred.data<-unique(c(prior.pred.data,parameters))
 
     var.prepost<-list()
     start<-Sys.time()
@@ -424,19 +430,22 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
 
 
       if(cl.dat=="character"){
-              #Determine which columns contain the data
+        #Determine which columns contain the data
         index.data<-list()
         for(l in 1:length(data)){
           index.data[[l]]<-grep(data[l],colnames(PP.sample))
         }
+        index.params<-list()
+        for(l in 1:length(parameters)){
+          index.params[[l]]<-which(colnames(PP.sample)==parameters[l])
+        }
         length.data<-length(unlist(index.data))
         names.data<-data
         Data.Fut<-array()
-        #Selecting one row of the data? DOES THIS MAKE SENSE?? 
-        #Find the quantile of one of the data points, then select the row with that...
-        index.pp<-sample(unlist(index.data),1)
-        index.choose<-which(PP.sample[,unlist(index.data)[index.pp]]==quantile(PP.sample[,unlist(index.data)[index.pp]],
-                                                                               probs=quantiles[q],type=3))
+        #Selecting one row of the parameters of interest
+        #Find the quantile of one of the parameters of interest, then select the row with that...
+        index.pp<-sample(unlist(index.params),1)
+        index.choose<-which(PP.sample[,index.pp]==quantile(PP.sample[,index.pp],probs=quantiles[q],type=3))
         for(d in 1:length.data){
           #Creating list of the future data to give to jags
           Data.Fut[unlist(index.data)[d]]<-as.numeric(PP.sample[index.choose,unlist(index.data)[d]])
@@ -448,6 +457,7 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
         Data.Fut<-Data.Fut.list
         names(Data.Fut)<-names.data
       }
+      
       if(cl.dat=="list"){
         Data.Fut<-data[[q]]
       }
