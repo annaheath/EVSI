@@ -79,13 +79,14 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
     #Find the number of times a variable is containted in the jags model
     #This allows us to determine matrix contructions for certain variables.
     #The variable a vector - i.e. it only appears once in the jags output
-    jags.params<-which(sapply(moniter,grep.fun,main=names(sample))==1)
+    moniter.single<-paste("^",moniter,"$",sep="")
+    jags.params<-which(sapply(moniter.single,grep.fun,main=names(sample))==1)
     inputs<-sample[,moniter[jags.params]]
 
     #Matrix Parameters
     if(length(jags.params)!=0){
-    multiple.params<-moniter[-jags.params]}
-    else{multiple.params<-moniter}
+    multiple.params<-moniter.single[-jags.params]}
+    else{multiple.params<-moniter.single}
 
     #Function to extract the matrix parameters from the jags object
     multiple.params.extract<-function(multi.params){
@@ -100,8 +101,13 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
     }
 
     #Sets the effects function arguements for the single parameters
-    formals(func)[which(args.names %in% names(inputs))]<-
-      inputs[i,which(names(inputs) %in% args.names)]
+    selection<-names(inputs)
+    for(s in 1:length(selection)){
+      formals(func)[which(args.names==selection[s])]<-inputs[i,s]
+    }
+    
+    #formals(func)[which(args.names %in% names(inputs))]<-
+    #  inputs[i,which(names(inputs) %in% args.names)]
     #Sets the effects function arguements for the matrix parameters
     formals(func)[args.names %in% multiple.params]<-
       multiple.params.extract(args.names[which(args.names %in% multiple.params)])
