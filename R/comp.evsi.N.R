@@ -516,7 +516,8 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
       names(Samp.Size)<-N
 
       #Both data sets must be given to BUGS
-      data.full<-append(append(Data.Fut,data.stats),Samp.Size)
+      data.full<-append(append(Data.Fut[[q]],data.stats),Samp.Size)
+
 
       ####Calculate EVSI by Quadrature####
             Model.BUGS<- R2OpenBUGS::bugs(data.full,inits=NULL,parameters.to.save=moniter,
@@ -589,6 +590,7 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
     c.fit<-evi$fitted.costs[,-he$n.comparators]
     c.fit.var<-var(c.fit)
 
+    n.entry<-1
     for(i in 1:he$n.comparisons){
       for(j in i:he$n.comparisons){
         if(he$n.comparisons>1){
@@ -600,9 +602,6 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
           y<-e.var-pre.var.e
         }
 
-        y<-t(e.var[i,j]-pre.var.e[i,j])
-
-        
         if(sd(y)==0){
           data.a.b<-list(sigma.mu=sd(y)/2,
                          sigma.tau=100,
@@ -626,7 +625,8 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
           )
         }
 
-        beta.ab<- R2OpenBUGS::bugs(data.a.b,inits=NULL,parameters.to.save=c("beta"),
+        initial.values<-list(list(beta=max(N.samp),sigma=max(0.1,sd(y)/2)))
+        beta.ab<- R2OpenBUGS::bugs(data.a.b,inits=initial.values,parameters.to.save=c("beta"),
                                       model.file=file.curve.fitting, n.burnin=n.burnin,n.iter=n.iter+n.burnin,n.thin=n.thin,n.chains=1,
                                       DIC=FALSE,debug=FALSE)
 
@@ -672,11 +672,13 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
                          x=as.vector(N.samp)
           )
         }
-        beta.ab<- R2OpenBUGS::bugs(data.a.b,inits=NULL,parameters.to.save=c("beta"),
+        initial.values<-list(list(beta=max(N.samp),sigma=max(0.1,sd(y)/2)))
+        
+        beta.ab<- R2OpenBUGS::bugs(data.a.b,inits=initial.values,parameters.to.save=c("beta"),
                                    model.file=file.curve.fitting, n.burnin=n.burnin,n.iter=n.iter+n.burnin,n.thin=n.thin,n.chains=1,
                                    DIC=FALSE,debug=FALSE)
         
-        beta.mat[,1,n.entry]<-as.data.frame(beta.ab$sims.matrix)[,1]
+        beta.mat[,2,n.entry]<-as.data.frame(beta.ab$sims.matrix)[,1]
         n.entry<-n.entry+1
       }
     }
