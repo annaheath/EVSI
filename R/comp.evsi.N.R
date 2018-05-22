@@ -117,7 +117,7 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
   quantiles<-sample((1:Q)/(Q+1),replace=F)
   if(length(N.range)==2){N.samp<-trunc((seq(sqrt(N.range[1]),sqrt(N.range[2]),length.out = Q))^2)}
   if(length(N.range)>2){N.samp<-N.range}
-  while(abs(cor(quantiles,N.samp))>0.0005){quantiles<-sample(quantiles,Q,replace=FALSE)}
+  #  while(abs(cor(quantiles,N.samp))>0.0005){quantiles<-sample(quantiles,Q,replace=FALSE)}
   
   #Generate future samples by finding prior-predictive distribution
   if(update=="jags"){#Model can be written in jags.
@@ -135,6 +135,97 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
     if(class(evi)=="evppi"){parameters<-evi$index}
     prior.pred.data<-unique(c(prior.pred.data,parameters))
 
+    
+    if((cl.dat=="character")|(class(he)!="bcea")|(class(evi)!="evppi")){
+      N.max<-max(N.samp)
+      Samp.Size<-list(N.max)
+      names(Samp.Size)<-N
+      #Runs the jags model based on the rjags package
+      Model.JAGS<- rjags::jags.model(model.stats,data=append(Samp.Size,data.stats),quiet=TRUE)
+      update(Model.JAGS,n.burnin,progress.bar="none")
+      Prior.Pred <- rjags::coda.samples(Model.JAGS, prior.pred.data, n.iter=n.iter,n.thin=n.thin,progress.bar="none")
+      PP.sample<-as.data.frame(Prior.Pred[[1]])
+    }
+    
+    if(cl.dat=="character"){
+      #Determine which columns contain the data
+      index.data<-list()
+      for(l in 1:length(data)){
+        index.data[[l]]<-grep(data[l],colnames(PP.sample))
+      }
+
+      #Select the data list
+      dat.num<-sapply(index.data,length)
+      if(length(which(dat.num!=N.max))!=0){
+        stop("You need to specify your data differently...")
+      }
+      
+      dat.full<-PP.sample[,unlist(index.data)]
+      clust<-kmeans(dat.full,centers=Q,iter.max=20)$cluster
+      clusters<-array(NA,dim=c(Q,sum(dat.num)))
+      for(l in 1:Q){
+        clusters[l,]<-apply(dat.full[which(clust==l),],2,quantile,probs=0.5,type=1)
+      }
+
+      names.data<-data
+      Data.Full<-list()
+      for(l in 1:length(data)){
+        Data.Full[[l]]<-clusters[,(((l-1)*N.max)+1):(l*N.max)] 
+      }
+      
+      Data.Fut<-vector("list",length(N.samp))
+      for(q in 1:Q){
+        for(l in 1:length(data)){
+          Data.Fut[[q]][[l]]<-Data.Full[[l]][q,1:N.samp[q]]
+        }
+        names(Data.Fut[[q]])<-data
+      }
+    }
+    
+    if(cl.dat=="list"){
+      Data.Fut<-data
+    }
+    
+    if(class(he)!="bcea"){
+      # Checks if BCEA is installed (and if not, asks for it)
+      if(!isTRUE(requireNamespace("BCEA",quietly=TRUE))) {
+        stop("You need to install the R package 'BCEA'. Please run in your R terminal:\n install.packages('BCEA')")
+      }
+      #Calculate costs and effects for all simulations
+      i<-1
+      #Set function arguements
+      formals(effects)<-find.args(effects,PP.sample,i)
+      #Runs model with all arguements set as above
+      model.effects<-effects()
+      e<-c<-matrix(NA,nrow=dim(PP.sample)[1],ncol=length(model.effects))
+      for(i in 1:dim(PP.sample)[1]){
+        #Set function arguements
+        formals(effects)<-find.args(effects,PP.sample,i)
+        #Runs model with all arguements set as above
+        e[i,]<-effects()
+        #Repeat analysis for costs
+        #Set function arguements
+        formals(costs)<-find.args(costs,PP.sample,i)
+        c[i,]<-costs()
+      }
+      he<-BCEA::bcea(e,c)
+    }
+    
+    if(class(evi)!="evppi"){
+      # Checks if BCEA is installed (and if not, asks for it)
+      if(!isTRUE(requireNamespace("BCEA",quietly=TRUE))) {
+        stop("You need to install the R package 'BCEA'. Please run in your R terminal:\n install.packages('BCEA')")
+      }
+      
+      #Find the columns that contain these parameters
+      index<-list()
+      for(l in 1:length(parameters)){
+        index[[l]]<-grep(parameters[l],colnames(PP.sample))
+      }
+      of.interest<-unlist(index)
+      #PSA.mat<-as.matrix(PP.sample[,unlist(index)])
+      evi<-BCEA::evppi(of.interest,PP.sample,he)
+    }
 
     ####Calculate EVSI by Quadrature####
     var.prepost<-list()
@@ -144,103 +235,8 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
       Samp.Size<-list(N.samp[q])
       names(Samp.Size)<-N
 
-      if((cl.dat=="character")|(class(he)!="bcea")|(class(evi)!="evppi")){
-        #Runs the jags model based on the rjags package
-        Model.JAGS<- rjags::jags.model(model.stats,data=append(Samp.Size,data.stats),quiet=TRUE)
-        update(Model.JAGS,n.burnin,progress.bar="none")
-        Prior.Pred <- rjags::coda.samples(Model.JAGS, prior.pred.data, n.iter=n.iter,n.thin=n.thin,progress.bar="none")
-        PP.sample<-as.data.frame(Prior.Pred[[1]])
-      }
-
-      if(cl.dat=="character"){
-         #Determine which columns contain the data
-        index.data<-list()
-        for(l in 1:length(data)){
-          index.data[[l]]<-grep(data[l],colnames(PP.sample))
-        }
-        index.params<-list()
-        for(l in 1:length(parameters)){
-          index.params[[l]]<-which(colnames(PP.sample)==parameters[l])
-        }
-        length.data<-length(unlist(index.data))
-        names.data<-data
-        Data.Fut<-array()
-        #Selecting one row of the parameters of interest
-        #Find the quantile of one of the parameters of interest, then select the row with that...
-        index.pp<-sample(unlist(index.params),1)
-        index.choose<-which(PP.sample[,index.pp]==quantile(PP.sample[,index.pp],probs=quantiles[q],type=3))
-        for(d in 1:length.data){
-          #Creating list of the future data to give to jags
-          Data.Fut[unlist(index.data)[d]]<-as.numeric(PP.sample[index.choose,unlist(index.data)[d]])
-        }
-        Data.Fut.list<-list()
-        for(d in 1:length(index.data)){
-          Data.Fut.list[[d]]<-Data.Fut[index.data[[d]]]
-        }
-        Data.Fut<-Data.Fut.list
-        names(Data.Fut)<-names.data
-      }
-      if(cl.dat=="list"){
-        Data.Fut<-data[[q]]
-      }
-
-      if(class(he)!="bcea"){
-        # Checks if BCEA is installed (and if not, asks for it)
-        if(!isTRUE(requireNamespace("BCEA",quietly=TRUE))) {
-          stop("You need to install the R package 'BCEA'. Please run in your R terminal:\n install.packages('BCEA')")
-        }
-        #Calculate costs and effects for all simulations
-        i<-1
-        #Set function arguements
-        formals(effects)<-find.args(effects,PP.sample,i)
-        #Runs model with all arguements set as above
-        model.effects<-effects()
-        e<-c<-matrix(NA,nrow=dim(PP.sample)[1],ncol=length(model.effects))
-        for(i in 1:dim(PP.sample)[1]){
-          #Set function arguements
-          formals(effects)<-find.args(effects,PP.sample,i)
-          #Runs model with all arguements set as above
-          e[i,]<-effects()
-          #Repeat analysis for costs
-          #Set function arguements
-          formals(costs)<-find.args(costs,PP.sample,i)
-          c[i,]<-costs()
-        }
-        he<-BCEA::bcea(e,c)
-      }
-      #Check number of interventions
-      #if(he$n.comparisons>1){stop("WARNING:This EVSI calculation method is currently not implemented for
-      #                            multi-decision problems")}
-
-      if(class(evi)!="evppi"){
-        # Checks if BCEA is installed (and if not, asks for it)
-        if(!isTRUE(requireNamespace("BCEA",quietly=TRUE))) {
-          stop("You need to install the R package 'BCEA'. Please run in your R terminal:\n install.packages('BCEA')")
-        }
-        #Determine which model rows contain statements defining the data
-        #lines.imp<-list()
-        #for(l in 1:length(data)){
-        #  lines.imp[[l]]<-grep(data[l],readLines(model.stats))
-        #}
-
-        #Determine which parameters are related to the data in those rows.
-        #lines.import<-readLines(model.stats)[unique(unlist(lines.imp))]
-        #params.pi<-names(which(sapply(unique(nameofinterest),grep.fun,main=lines.import)>0))
-
-        #Find the columns that contain these parameters
-        index<-list()
-        for(l in 1:length(parameters)){
-          index[[l]]<-grep(parameters[l],colnames(PP.sample))
-        }
-        of.interest<-unlist(index)
-        #PSA.mat<-as.matrix(PP.sample[,unlist(index)])
-        evi<-BCEA::evppi(of.interest,PP.sample,he)
-      }
-
-
-
       #Both data sets must be given to jags
-      data.full<-append(append(Data.Fut,data.stats),Samp.Size)
+      data.full<-append(append(Data.Fut[[q]],data.stats),Samp.Size)
 
       Model.JAGS<- rjags::jags.model(model.stats,data =  data.full,quiet = TRUE)
       update(Model.JAGS,n.burnin,progress.bar="none")
@@ -418,7 +414,100 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
     if(cl.dat=="character"){prior.pred.data <-unique(c(prior.pred.data,data))}
     if(class(evi)=="evppi"){parameters<-evi$index}
     prior.pred.data<-unique(c(prior.pred.data,parameters))
-
+    
+    
+    if((cl.dat=="character")|(class(he)!="bcea")|(class(evi)!="evppi")){
+      N.max<-max(N.samp)
+      Samp.Size<-list(N.max)
+      names(Samp.Size)<-N
+      #Runs the BUGS model based on the R2OpenBUGS package
+      Model.BUGS<- R2OpenBUGS::bugs(append(data.stats,Samp.Size),inits=NULL,parameters.to.save=prior.pred.data,
+                                    model.file=model.stats, n.burnin=n.burnin,n.iter=n.iter+n.burnin,n.thin=n.thin,n.chain=1,
+                                    DIC=FALSE,debug=FALSE)
+      PP.sample<-as.data.frame(Model.BUGS$sims.matrix)
+    }
+    
+    
+    if(cl.dat=="character"){
+      #Determine which columns contain the data
+      index.data<-list()
+      for(l in 1:length(data)){
+        index.data[[l]]<-grep(data[l],colnames(PP.sample))
+      }
+      
+      #Select the data list
+      dat.num<-sapply(index.data,length)
+      if(length(which(dat.num!=N.max))!=0){
+        stop("You need to specify your data differently...")
+      }
+      
+      dat.full<-PP.sample[,unlist(index.data)]
+      clust<-kmeans(dat.full,centers=Q,iter.max=20)$cluster
+      clusters<-array(NA,dim=c(Q,sum(dat.num)))
+      for(l in 1:Q){
+        clusters[l,]<-apply(dat.full[which(clust==l),],2,quantile,probs=0.5,type=1)
+      }
+      
+      names.data<-data
+      Data.Full<-list()
+      for(l in 1:length(data)){
+        Data.Full[[l]]<-clusters[,(((l-1)*N.max)+1):(l*N.max)] 
+      }
+      
+      Data.Fut<-vector("list",length(N.samp))
+      for(q in 1:Q){
+        for(l in 1:length(data)){
+          Data.Fut[[q]][[l]]<-Data.Full[[l]][q,1:N.samp[q]]
+        }
+        names(Data.Fut[[q]])<-data
+      }
+    }
+    
+    if(cl.dat=="list"){
+      Data.Fut<-data
+    }
+    
+    if(class(he)!="bcea"){
+      # Checks if BCEA is installed (and if not, asks for it)
+      if(!isTRUE(requireNamespace("BCEA",quietly=TRUE))) {
+        stop("You need to install the R package 'BCEA'. Please run in your R terminal:\n install.packages('BCEA')")
+      }
+      #Calculate costs and effects for all simulations
+      i<-1
+      #Set function arguements
+      formals(effects)<-find.args(effects,PP.sample,i)
+      #Runs model with all arguements set as above
+      model.effects<-effects()
+      e<-c<-matrix(NA,nrow=dim(PP.sample)[1],ncol=length(model.effects))
+      for(i in 1:dim(PP.sample)[1]){
+        #Set function arguements
+        formals(effects)<-find.args(effects,PP.sample,i)
+        #Runs model with all arguements set as above
+        e[i,]<-effects()
+        #Repeat analysis for costs
+        #Set function arguements
+        formals(costs)<-find.args(costs,PP.sample,i)
+        c[i,]<-costs()
+      }
+      he<-BCEA::bcea(e,c)
+    }
+    
+    if(class(evi)!="evppi"){
+      # Checks if BCEA is installed (and if not, asks for it)
+      if(!isTRUE(requireNamespace("BCEA",quietly=TRUE))) {
+        stop("You need to install the R package 'BCEA'. Please run in your R terminal:\n install.packages('BCEA')")
+      }
+      
+      #Find the columns that contain these parameters
+      index<-list()
+      for(l in 1:length(parameters)){
+        index[[l]]<-grep(parameters[l],colnames(PP.sample))
+      }
+      of.interest<-unlist(index)
+      #PSA.mat<-as.matrix(PP.sample[,unlist(index)])
+      evi<-BCEA::evppi(of.interest,PP.sample,he)
+    }
+    
     var.prepost<-list()
     start<-Sys.time()
     for(q in 1:Q){
@@ -426,101 +515,9 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
       Samp.Size<-list(N.samp[q])
       names(Samp.Size)<-N
 
-      if((cl.dat=="character")|(class(he)!="bcea")|(class(evi)!="evppi")){
-        #Runs the BUGS model based on the R2OpenBUGS package
-        Model.BUGS<- R2OpenBUGS::bugs(append(data.stats,Samp.Size),inits=NULL,parameters.to.save=prior.pred.data,
-                          model.file=model.stats, n.burnin=n.burnin,n.iter=n.iter+n.burnin,n.thin=n.thin,n.chain=1,
-                          DIC=FALSE,debug=FALSE)
-        PP.sample<-as.data.frame(Model.BUGS$sims.matrix)
-      }
+      #Both data sets must be given to BUGS
+      data.full<-append(append(Data.Fut[[q]],data.stats),Samp.Size)
 
-
-      if(cl.dat=="character"){
-        #Determine which columns contain the data
-        index.data<-list()
-        for(l in 1:length(data)){
-          index.data[[l]]<-grep(data[l],colnames(PP.sample))
-        }
-        index.params<-list()
-        for(l in 1:length(parameters)){
-          index.params[[l]]<-which(colnames(PP.sample)==parameters[l])
-        }
-        length.data<-length(unlist(index.data))
-        names.data<-data
-        Data.Fut<-array()
-        #Selecting one row of the parameters of interest
-        #Find the quantile of one of the parameters of interest, then select the row with that...
-        index.pp<-sample(unlist(index.params),1)
-        index.choose<-which(PP.sample[,index.pp]==quantile(PP.sample[,index.pp],probs=quantiles[q],type=3))
-        for(d in 1:length.data){
-          #Creating list of the future data to give to jags
-          Data.Fut[unlist(index.data)[d]]<-as.numeric(PP.sample[index.choose,unlist(index.data)[d]])
-        }
-        Data.Fut.list<-list()
-        for(d in 1:length(index.data)){
-          Data.Fut.list[[d]]<-Data.Fut[index.data[[d]]]
-        }
-        Data.Fut<-Data.Fut.list
-        names(Data.Fut)<-names.data
-      }
-      
-      if(cl.dat=="list"){
-        Data.Fut<-data[[q]]
-      }
-
-      if(class(he)!="bcea"){
-        if(!isTRUE(requireNamespace("BCEA",quietly=TRUE))) {
-          stop("You need to install the R package 'BCEA'. Please run in your R terminal:\n install.packages('BCEA')")
-        }
-        #Calculate costs and effects for all simulations
-        i<-1
-        #Set function arguements
-        formals(effects)<-find.args(effects,PP.sample,i)
-        #Runs model with all arguements set as above
-        model.effects<-effects()
-        e<-c<-matrix(NA,nrow=dim(PP.sample)[1],ncol=length(model.effects))
-        for(i in 1:dim(PP.sample)[1]){
-          #Set function arguements
-          formals(effects)<-find.args(effects,PP.sample,i)
-          #Runs model with all arguements set as above
-          e[i,]<-effects()
-          #Repeat analysis for costs
-          #Set function arguements
-          formals(costs)<-find.args(costs,PP.sample,i)
-          c[i,]<-costs()
-        }
-        he<-BCEA::bcea(e,c)
-      }
-      #Check number of interventions
-      #if(he$n.comparisons>1){stop("WARNING:This EVSI calculation method is currently not implemented for
-      #                            multi-decision problems")}
-
-      if(class(evi)!="evppi"){
-        if(!isTRUE(requireNamespace("BCEA",quietly=TRUE))) {
-          stop("You need to install the R package 'BCEA'. Please run in your R terminal:\n install.packages('BCEA')")
-        }
-        #Determine which model rows contain statements defining the data
-        #lines.imp<-list()
-        #for(l in 1:length(data)){
-        #  lines.imp[[l]]<-grep(data[l],readLines(model.stats))
-        #}
-
-        #Determine which parameters are related to the data in those rows.
-        #lines.import<-readLines(model.stats)[unique(unlist(lines.imp))]
-        #params.pi<-names(which(sapply(unique(nameofinterest),grep.fun,main=lines.import)>0))
-
-        #Find the columns that contain these parameters
-        index<-list()
-        for(l in 1:length(parameters)){
-          index[[l]]<-grep(parameters[l],colnames(PP.sample))
-        }
-        of.interest<-unlist(index)
-        #PSA.mat<-as.matrix(PP.sample[,unlist(index)])
-        evi<-BCEA::evppi(of.interest,PP.sample,he)
-      }
-
-      #Both data sets must be given to jags
-      data.full<-append(append(Data.Fut,data.stats),Samp.Size)
 
       ####Calculate EVSI by Quadrature####
             Model.BUGS<- R2OpenBUGS::bugs(data.full,inits=NULL,parameters.to.save=moniter,
@@ -593,6 +590,7 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
     c.fit<-evi$fitted.costs[,-he$n.comparators]
     c.fit.var<-var(c.fit)
 
+    n.entry<-1
     for(i in 1:he$n.comparisons){
       for(j in i:he$n.comparisons){
         if(he$n.comparisons>1){
@@ -604,9 +602,6 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
           y<-e.var-pre.var.e
         }
 
-        y<-t(e.var[i,j]-pre.var.e[i,j])
-
-        
         if(sd(y)==0){
           data.a.b<-list(sigma.mu=sd(y)/2,
                          sigma.tau=100,
@@ -630,7 +625,8 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
           )
         }
 
-        beta.ab<- R2OpenBUGS::bugs(data.a.b,inits=NULL,parameters.to.save=c("beta"),
+        initial.values<-list(list(beta=max(N.samp),sigma=max(0.1,sd(y)/2)))
+        beta.ab<- R2OpenBUGS::bugs(data.a.b,inits=initial.values,parameters.to.save=c("beta"),
                                       model.file=file.curve.fitting, n.burnin=n.burnin,n.iter=n.iter+n.burnin,n.thin=n.thin,n.chains=1,
                                       DIC=FALSE,debug=FALSE)
 
@@ -676,11 +672,13 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
                          x=as.vector(N.samp)
           )
         }
-        beta.ab<- R2OpenBUGS::bugs(data.a.b,inits=NULL,parameters.to.save=c("beta"),
+        initial.values<-list(list(beta=max(N.samp),sigma=max(0.1,sd(y)/2)))
+        
+        beta.ab<- R2OpenBUGS::bugs(data.a.b,inits=initial.values,parameters.to.save=c("beta"),
                                    model.file=file.curve.fitting, n.burnin=n.burnin,n.iter=n.iter+n.burnin,n.thin=n.thin,n.chains=1,
                                    DIC=FALSE,debug=FALSE)
         
-        beta.mat[,1,n.entry]<-as.data.frame(beta.ab$sims.matrix)[,1]
+        beta.mat[,2,n.entry]<-as.data.frame(beta.ab$sims.matrix)[,1]
         n.entry<-n.entry+1
       }
     }
