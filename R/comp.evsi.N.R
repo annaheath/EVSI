@@ -85,8 +85,8 @@ comp.evsi.N<-function(model.stats,data,N,N.range=c(30,1500),effects,costs,he=NUL
 
     #Matrix Parameters
     if(length(jags.params)!=0){
-    multiple.params<-moniter.single[-jags.params]}
-    else{multiple.params<-moniter.single}
+    multiple.params<-args.names[-jags.params]}
+    else{multiple.params<-args.names}
 
     #Function to extract the matrix parameters from the jags object
     multiple.params.extract<-function(multi.params){
