@@ -457,7 +457,7 @@ launch.App<-function(...){
                         shiny::p("Wilson, E.,",
                                  shiny::a("A practical guide to value of information analysis, ",href="https://link.springer.com/article/10.1007%2Fs40273-014-0219-x"),
                                  shiny::em("PharmacoEconomics"),"2015"),
-                        shiny::p("Steuten L., van de Wetering G., Groothuis-Oudshoorn K. and Ret�l V.,",
+                        shiny::p("Steuten L., van de Wetering G., Groothuis-Oudshoorn K. and Retèl V.,",
                                  shiny::a("A Systematic and Critical Review of the Evolving Methods and Applications of Value of Information in Academia and Practice, ",
                                           href="https://link.springer.com/article/10.1007%2Fs40273-012-0008-3"),
                                  shiny::em("PharmacoEconomics"),"2013"),
@@ -523,7 +523,7 @@ launch.App<-function(...){
                                         shiny::p("Wilson, E.,",
                                                  shiny::a("A practical guide to value of information analysis, ",href="https://link.springer.com/article/10.1007%2Fs40273-014-0219-x"),
                                                  shiny::em("PharmacoEconomics"),"2015"),
-                                        shiny::p("Steuten L., van de Wetering G., Groothuis-Oudshoorn K. and Ret�l V.,",
+                                        shiny::p("Steuten L., van de Wetering G., Groothuis-Oudshoorn K. and Retèl V.,",
                                                  shiny::a("A Systematic and Critical Review of the Evolving Methods and Applications of Value of Information in Academia and Practice, ",
                                                           href="https://link.springer.com/article/10.1007%2Fs40273-012-0008-3"),
                                                  shiny::em("PharmacoEconomics"),"2013"),
@@ -556,15 +556,15 @@ launch.App<-function(...){
                                                      equally likely to be cost-effective."),width=4),
                         shiny::mainPanel(shiny::plotOutput(outputId="ppEVSIbywtp"),
                                          shiny::p("References: Heath A. and Baio, G., ",
-                                                  shiny::a("An Efficient Calculation Method for the Expected Value of Sample Information: Can we do it? Yes, we can ",
+                                                  shiny::a("Calculating the Expected Value of Sample Information using Efficient Nested Monte Carlo: A Tutorial",
                                                            href="https://arxiv.org/abs/1709.02319"),
-                                                  shiny::em(", arXiv preprint"),", 2018"),
+                                                  shiny::em(", Value in Health"),", Forthcoming"),
                                          shiny::p("McCabe, C., Claxton K. and Culyer, A., ",
                                                   shiny::a("The NICE cost-effectiveness threshold",href="https://link.springer.com/article/10.2165/00019053-200826090-00004"),
                                                   shiny::em(", PharmacoEconomics"),", 2008"),
                                          shiny::p("Baio, G., ",
-                                                  shiny::a("Bayesian Methods in Health Economics",href="https://sites.google.com/a/statistica.it/gianluca/bookhe"),
-                                                  shiny::em(", Springer"),", 2012"),
+                                                  shiny::a("Bayesian Methods in Health Economics",href="http://statistica.it/gianluca/book/bmhe"),
+                                                  shiny::em(", CRC Press"),", 2012"),
                                          shiny::p("Baio, G., Berardi, A. and Heath, A., ",
                                                   shiny::a("Bayesian Cost-Effectiveness Analysis with the R package BCEA",href="http://www.springer.com/gb/book/9783319557168"),
                                                   shiny::em(", Springer"),", 2017"),width=8)
@@ -586,11 +586,12 @@ launch.App<-function(...){
                                                            would will be for willingness to pay values close to the \"break-even\" point.")),width=4),
                         shiny::mainPanel(shiny::plotOutput(outputId="ppEVSIbyn"),
                                          shiny::p("References: Heath, A., Manolopoulou I. and Baio, G., ",
-                                                  shiny::a("Efficient Monte Carlo Estimation of the Expected Value of Sample Information using Moment Matching",href="https://arxiv.org/abs/1611.01373"),
-                                                  shiny::em(", Medical Decision Making"),", forthcoming"),
+                                                  shiny::a("Efficient Monte Carlo Estimation of the Expected Value of Sample Information using Moment Matching",
+                                                           href="http://journals.sagepub.com/doi/abs/10.1177/0272989X17738515?journalCode=mdma"),
+                                                  shiny::em(", Medical Decision Making"),", 2018"),
                                          shiny::p("Heath, A., Manolopoulou I. and Baio, G., ",
-                                                  shiny::a(" Bayesian Curve Fitting to Estimate the Expected Value of Sample Information using Moment Matching Across Different Sample Sizes",href="https://sites.google.com/site/annaheathstats/selected-publications/curve-fitting-paper"),
-                                                  shiny::em(", Working Paper"),", 2017"),
+                                                  shiny::a(" Bayesian Curve Fitting to Estimate the Expected Value of Sample Information using Moment Matching Across Different Sample Sizes",href="https://arxiv.org/pdf/1804.09590.pdf"),
+                                                  shiny::em(", ArXiv"),", 2018"),
                                          width=8)
                         )
       }
@@ -702,8 +703,8 @@ launch.App<-function(...){
                                                                                                                                shiny::a("Development of a New Software Tool to Compute the Expected Value of Sample Information - An application to the HomeHealth intervention",href="https://sites.google.com/site/annaheathstats"),
                                                                                                                                shiny::em(", HESG Winter Meeting"),", 2018"),
                                                                                                                       shiny::p("Heath, A., Manolopoulou I. and Baio, G., ",
-                                                                                                                               shiny::a(" Bayesian Curve Fitting to Estimate the Expected Value of Sample Information using Moment Matching Across Different Sample Sizes",href="https://sites.google.com/site/annaheathstats/selected-publications/curve-fitting-paper"),
-                                                                                                                               shiny::em(", Working Paper"),", 2017")))
+                                                                                                                               shiny::a("Estimating the Expected Value of Sample Information across Diﬀerent Sample Sizes using Moment Matching and Non-Linear Regression",href="https://arxiv.org/pdf/1804.09590.pdf"),
+                                                                                                                               shiny::em(", ArXiv"),", 2018")))
                                                                                         ),
                         #Optimal Sample Size
                         shiny::tabPanel("Optimal Sample Size",value = "OSS",
@@ -834,8 +835,9 @@ launch.App<-function(...){
                                                                                                                                                 shiny::a("Development of a New Software Tool to Compute the Expected Value of Sample Information - An application to the HomeHealth intervention",href="https://sites.google.com/site/annaheathstats"),
                                                                                                                                                 shiny::em(", HESG Winter Meeting"),", 2018"),
                                                                                                                                        shiny::p("Heath, A., Manolopoulou I. and Baio, G., ",
-                                                                                                                                                shiny::a(" Bayesian Curve Fitting to Estimate the Expected Value of Sample Information using Moment Matching Across Different Sample Sizes",href="https://sites.google.com/site/annaheathstats/selected-publications/curve-fitting-paper"),
-                                                                                                                                                shiny::em(", Working Paper"),", 2017")))
+                                                                                                                                                shiny::a("Estimating the Expected Value of Sample Information across Diﬀerent Sample Sizes using Moment Matching and Non-Linear Regression",
+                                                                                                                                                href="https://arxiv.org/pdf/1804.09590.pdf"),
+                                                                                                                                                shiny::em(", ArXiv"),", 2018")))
                                                                                                          )
 
                                                                                                            ))
