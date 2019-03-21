@@ -14,12 +14,12 @@ running.bugs<-function(model, data, variable.names, n.burnin, n.iter, thin){
                               model.file=model, 
                               n.burnin = n.burnin,
                               n.iter = n.iter+n.burnin, 
-                              n.thin = n.thin,
+                              n.thin = thin,
                               n.chain = 1,
                               DIC = FALSE, 
                               debug = FALSE)
   # Create dataframe for results
-  samples.df <- as.data.frame(samples[[1]])
+  samples.df <- as.data.frame(samples$sims.array[,1,])
   
   return(samples.df)
 }
