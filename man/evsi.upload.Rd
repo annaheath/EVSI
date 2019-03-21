@@ -6,8 +6,8 @@
 Allows EVSI calculated outside of package to be uploaded so graphics can be used.
 INPUTS}
 \usage{
-evsi.upload(e, c, parameter, input, EVSI.mat = NULL, model.stats = NULL,
-  wtp = NULL, N = NULL)
+evsi.upload(e, c, parameter, input, EVSI.mat = NULL,
+  model.stats = NULL, wtp = NULL, N = NULL)
 }
 \arguments{
 \item{e}{A matrix containing simuations for the variable of clinical effectiveness for

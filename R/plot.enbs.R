@@ -1,5 +1,5 @@
-##enbs.plot############################################################
-enbs.plot<-function(evsi,setup,pp,prob=NULL,
+##plot.enbs############################################################
+plot.enbs <- function(evsi,setup,pp,prob=NULL,
                     Pop=10000,Time=10,Dis=0.035,
                     wtp=NULL,N=NULL,pos=c("bottomright")){
   ##'Produces a graphic that considers the cost-effectiveness of a single future trial for different
@@ -162,7 +162,7 @@ enbs.plot<-function(evsi,setup,pp,prob=NULL,
          col=c(rep("black",length.prob),"springgreen"),lwd=lwd,lty=lty,
          box.lwd = 0,box.col = "white",bg = "white")
   box()
-  optimal<-optim.ss(evsi,setup,pp,Pop,Time,wtp=wtp,Dis=Dis)
+  optimal<-optim.samplesize(evsi,setup,pp,Pop,Time,wtp=wtp,Dis=Dis)
   axis(side=1)#,at=c(optimal$SS.I,optimal$SS.max,min(N),max(N)))
 
   a<-0.04

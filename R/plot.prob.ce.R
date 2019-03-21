@@ -1,10 +1,10 @@
-##evsi.pop############################################################
-evsi.pop<-function(evsi,trial.cost=NULL,setup=NULL,pp=NULL,
+##plot.prob.ce############################################################
+plot.prob.ce <- function(evsi,trial.cost=NULL,setup=NULL,pp=NULL,
                    Pop=c(0,10000),Time=c(1,20),Dis=0.035,
                    wtp=NULL,N=NULL,pos=c("topright")){
   ##'Produces a graphic that considers the cost-effectiveness of a single future trial for different
   ##'Time Horizons for the treatment and incidence population
-  ##'INPUTS:
+  ##INPUTS:
   ##'@param evsi An evsi object.
   ##'@param trial.cost Either a fixed trial cost (numeric),a minimum and maximum value for the possible trial costs
   ##'    (numeric) or a distribution for a trial cost (character string) - to give probability of cost-effectiveness
@@ -79,6 +79,7 @@ evsi.pop<-function(evsi,trial.cost=NULL,setup=NULL,pp=NULL,
   if(length(evsi$attrib$CI)==1){
     type.evsi<-"det"
     ##Select per person EVSI for plot
+    evsi.focal<-c(evsi$evsi[N.select,wtp.select,1])
     evsi.params<-c(evsi$evsi[N.select,wtp.select,1],0)}
 
   if(length(evsi$attrib$CI)>1){
@@ -88,12 +89,7 @@ evsi.pop<-function(evsi,trial.cost=NULL,setup=NULL,pp=NULL,
     evsi.1<-evsi$evsi[N.select,wtp.select,order(evsi$evsi[N.select,wtp.select,])[1]]
     evsi.2<-evsi$evsi[N.select,wtp.select,order(evsi$evsi[N.select,wtp.select,])[2]]
     evsi.params<-c((q.2*evsi.1-evsi.2*q.1)/(q.2-q.1),(evsi.2-evsi.1)/(q.2-q.1))
-    #quants<-array()
-    #for(i in 1:(length(evsi$attrib$CI)-1)){
-    #  quants[i]<-pnorm(evsi$evsi[N.select,wtp.select,i],evsi.params[1],evsi.params[2])-evsi$attrib$CI[length(evsi$attrib$CI)-(i-1)]}
-    #discrep<-mean(quants,na.rm=T)
-    #if(discrep>0.2){warning("EVSI distribution not well approximated by a normal, the probabilistic EVSI analysis may be incorrect")}
-  }
+    }
 
   ##Determine trial costs
   if(is.null(trial.cost)){

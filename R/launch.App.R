@@ -222,7 +222,7 @@ launch.App<-function(...){
     #Per person EVSI by N - wtp slider
     output$ppEVSIbyn<-shiny::renderPlot({
       evsi<-evsi()
-      plot.evsi.N(evsi,wtp=as.numeric(input$wtp))
+      plot.samplesize(evsi,wtp=as.numeric(input$wtp))
     })
 
     #Probability of Cost Effective Trial plot
@@ -234,14 +234,14 @@ launch.App<-function(...){
       Time<-as.numeric(input$Time)
       setup<-as.numeric(c(input$Setupmin,input$Setupmax))
       if(length(evsi$attrib$N)==1){
-        evsi.pop(evsi,trial.cost=setup,
+        plot.prob.ce(evsi,trial.cost=setup,
                  Pop=Pop,Time=Time,Dis=input$Dis,
                  wtp=as.numeric(input$wtp.CE))
       }
       if(length(evsi$attrib$N)>1){
         pp<-as.numeric(c(input$PerPersmin,input$PerPersmax))
         N.chosen.CE<-evsi$attrib$N[which.min((evsi$attrib$N-as.numeric(input$n.CE))^2)]
-        evsi.pop(evsi,setup=setup,pp=pp,
+        plot.prob.ce(evsi,setup=setup,pp=pp,
                  Pop=Pop,Time=Time,Dis=input$Dis,
                  wtp=as.numeric(input$wtp.CE),N=N.chosen.CE)
       }
@@ -258,7 +258,7 @@ launch.App<-function(...){
       if(is.null(input$Time.OS)){return(NULL)}
       pp<-as.numeric(c(input$PerPersmin,input$PerPersmax))
       setup<-as.numeric(c(input$Setupmin,input$Setupmax))
-      suppressWarnings(optimal<-optim.ss(evsi,setup,pp,input$Pop.OS,input$Time.OS,Dis=input$Dis,wtp=as.numeric(input$wtp.OS)))
+      suppressWarnings(optimal<-optim.samplesize(evsi,setup,pp,input$Pop.OS,input$Time.OS,Dis=input$Dis,wtp=as.numeric(input$wtp.OS)))
       shiny::tagList(
         "The ",tags$b(tags$em("optimal sample size"))," for this study is marked by a red triangle on the graph above and is equal to ",
         shiny::tags$b(optimal$SS.max),
@@ -278,7 +278,7 @@ launch.App<-function(...){
     #  if(is.null(input$Time.OS)){return(NULL)}
     #  pp<-as.numeric(c(input$PerPersmin,input$PerPersmax))
     #  setup<-as.numeric(c(input$Setupmin,input$Setupmax))
-    #  suppressWarnings(optimal<-optim.ss(evsi,setup,pp,input$Pop.OS,input$Time.OS,Dis=input$Dis,wtp=as.numeric(input$wtp.OS)))
+    #  suppressWarnings(optimal<-optim.samplesize(evsi,setup,pp,input$Pop.OS,input$Time.OS,Dis=input$Dis,wtp=as.numeric(input$wtp.OS)))
     #  optimal$SS.max
     #  optimal$SS.I[1]
     #}
@@ -289,7 +289,7 @@ launch.App<-function(...){
     #  if(is.null(input$Time.OS)){return(NULL)}
     #  pp<-as.numeric(c(input$PerPersmin,input$PerPersmax))
     #  setup<-as.numeric(c(input$Setupmin,input$Setupmax))
-    #  suppressWarnings(optimal<-optim.ss(evsi,setup,pp,input$Pop.OS,input$Time.OS,Dis=input$Dis,wtp=as.numeric(input$wtp.OS)))
+    #  suppressWarnings(optimal<-optim.samplesize(evsi,setup,pp,input$Pop.OS,input$Time.OS,Dis=input$Dis,wtp=as.numeric(input$wtp.OS)))
     #  optimal$SS.max
     #  optimal$SS.I[2]
     #}
@@ -302,7 +302,7 @@ launch.App<-function(...){
       setup<-as.numeric(c(input$Setupmin,input$Setupmax))
       shiny::tagList(
         "At the optimal sample size the", tags$b(tags$em("Expected Net Benefit of Sampling")), "is equal to ",
-        tags$b(format(round(suppressWarnings(optim.ss(evsi,setup,pp,as.numeric(input$Pop.OS),as.numeric(input$Time.OS),Dis=input$Dis,
+        tags$b(format(round(suppressWarnings(optim.samplesize(evsi,setup,pp,as.numeric(input$Pop.OS),as.numeric(input$Time.OS),Dis=input$Dis,
                                                       wtp=as.numeric(input$wtp.OS))$ENBS),-1)),big.mark=" ",scientific=FALSE),
         ". If this is greater than 0 then the study has economic benefit, if not then the ENBS demonstrates that the study not cost-effective."
       )
@@ -316,7 +316,7 @@ launch.App<-function(...){
       pp<-as.numeric(c(input$PerPersmin,input$PerPersmax))
       setup<-as.numeric(c(input$Setupmin,input$Setupmax))
 
-      enbs.plot(evsi,setup,pp,Pop=as.numeric(input$Pop.OS),Time=as.numeric(input$Time.OS),
+      plot.enbs(evsi,setup,pp,Pop=as.numeric(input$Pop.OS),Time=as.numeric(input$Time.OS),
                 Dis=input$Dis,wtp=as.numeric(input$wtp.OS))
     })
 
