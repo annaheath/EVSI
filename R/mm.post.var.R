@@ -193,7 +193,7 @@ mm.post.var <- function(model.stats, data, N.name = NULL, N.size = NULL,
         data.full <- append(data.full, ss)
       }
       # Sample from Bayesian updating
-      sample.dat <- update.func(model.stats, data.full, monitor.data, n.burnin, n.iter, n.thin)
+      sample.dat <- update.func(model.stats, data.full, monitor, n.burnin, n.iter, n.thin)
       # Use the JAGS output as inputs for the effects and costs functions
       incremental.benefit <- matrix(NA, nrow=dim(sample.dat)[1], ncol=2*he$n.comparisons)
 

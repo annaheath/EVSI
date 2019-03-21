@@ -20,7 +20,7 @@ running.bugs<-function(model, data, variable.names, n.burnin, n.iter, thin, init
                               DIC = FALSE, 
                               debug = FALSE)
   # Create dataframe for results
-  samples.df <- as.data.frame(samples[[1]])
+  samples.df <- as.data.frame(samples$sims.array[,1,])
   
   return(samples.df)
 }
