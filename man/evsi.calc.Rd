@@ -6,21 +6,25 @@
 measurements as required. This function can be fed into/used in the other plot functions
 This should allow people to upload their own EVSI matrices and still use the plotting capabilities.}
 \usage{
-evsi.calc(comp.evsi.N, wtp = NULL, N = NULL, CI = NULL)
+evsi.calc(mm.var, wtp = NULL, N = NULL, CI = NULL)
 }
 \arguments{
-\item{comp.evsi.N}{Output of the comp.evsi.N function}
+\item{mm.var}{An mm.var object computed from the mm.post.var function in the EVSI package.
+The posterior variances can also be calculated external to the package and passed as a list
+to the evsi.calc function. If this is the case a bcea object, an evppi object, N.calc and
+a Bayesian updating program, if mm.var is estimated across different sample sizes must 
+also be provided.}
 
 \item{wtp}{The willingness to pay value(s) for which the EVSI should be calculated.
-It will be chosen as all the wtp values if NULL.}
+It will be chosen as all the wtp values in the bcea object, either passed as he or 
+directly from the mm.var object.}
 
 \item{N}{The sample sizes for which the EVSI should be calculated. If NULL it will select
-all the values that the EVSI has been calculated for. NOTE: N can be chosen as any
-value but wtp needs to be on the grid chosen in comp.evsi.N.}
+a range of values for which the EVSI was calculated in the mm.var object. If the mm.var
+object is not given then this argument must be provided.}
 
-\item{CI}{The confidence levels for the credible intervals of the EVSI. If NULL chosen as
-
-OUTPUTS}
+\item{CI}{If EVSI is calculated across multiple sample sizes then this gives the confidence 
+level for the credible intervals of the EVSI. If NULL chosen as 95% and 75% intervals.}
 }
 \value{
 An evsi object.

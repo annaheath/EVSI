@@ -1,5 +1,5 @@
-##optim.ss#############################################################
-optim.ss<-function(evsi,setup,pp,Pop,Time,wtp=NULL,Dis=0.035){
+##optim.samplesize#############################################################
+optim.samplesize<-function(evsi,setup,pp,Pop,Time,wtp=NULL,Dis=0.035){
   ##'Calculates the optimal sample size for the future trial.
   ##INPUTS
   ##'@param evsi An evsi object that calculates the evsi by sample size

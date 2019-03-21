@@ -1,5 +1,5 @@
-##plot.evsi.N###########################################################
-plot.evsi.N<-function(evsi,wtp=NULL,pos=c("bottomright"),CI=NULL){
+##plot.samplesize###########################################################
+plot.samplesize <- function(evsi,wtp=NULL,pos=c("bottomright"),CI=NULL){
   ##'Calculating the EVSI for a specific WTP giving the uncertainty bands across the different
   ##'samples sizes
   ##INPUTS
