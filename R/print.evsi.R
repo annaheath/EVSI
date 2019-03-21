@@ -10,7 +10,7 @@ print.evsi<-function(obj.evsi){
   ##' @export print.evsi
   
   ## Set conditions
-  wtp <- obj.evsi$he$kstar[1]
+  wtp <- max(0,obj.evsi$he$kstar[1],na.rm=TRUE)
   wtp <- obj.evsi$attrib$wtp[which.min((obj.evsi$attrib$wtp-wtp)^2)]
   N <- quantile(obj.evsi$attrib$N, probs = 0.5, type = 4)
 
