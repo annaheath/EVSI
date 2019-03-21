@@ -104,8 +104,13 @@ evsi.calc<-function(mm.var, wtp=NULL, N=NULL, CI=NULL){
   n.entry <- 1
   for(i in 1:mm.var$he$n.comparisons){
     for(j in i:mm.var$he$n.comparisons){
-      beta.mat[,1,n.entry] <- fit.var.regression(simplify.var, e.var, e.fit, mm.var$N.size, i, j, mm.var$he, mm.var$update)
-      beta.mat[,2,n.entry] <- fit.var.regression(simplify.var, c.var, c.fit, mm.var$N.size, i, j, mm.var$he, mm.var$update)
+      beta.mat[,1,n.entry] <- fit.var.regression(
+        simplify.var[1:mm.var$he$n.comparisons, 1:mm.var$he$n.comparisons,],
+        e.var, e.fit, mm.var$N.size, i, j, mm.var$he, mm.var$update)
+      beta.mat[,2,n.entry] <- fit.var.regression(
+        simplify.var[(mm.var$he$n.comparisons + 1):(2 * mm.var$he$n.comparisons),
+        (mm.var$he$n.comparisons + 1):(2 * mm.var$he$n.comparisons),], 
+        c.var, c.fit, mm.var$N.size, i, j, mm.var$he, mm.var$update)
       # How to populate the variance matrices
       index[i, j] <- index[j, i] <- n.entry
       n.entry<-n.entry+1

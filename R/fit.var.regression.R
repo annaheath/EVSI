@@ -14,11 +14,11 @@ fit.var.regression <- function(mm.var, var.prior, fit, N.calc, row, column, he, 
   # Specify data for non-linear regression fit.
   var.PI=x=NULL
   if(he$n.comparisons>1){
-    pre.var <- mm.var[1:he$n.comparisons,1:he$n.comparisons,]
+    pre.var <- mm.var
     prepost.var <- t(var.prior[row, column] - pre.var[row, column, ])
   }
   if(he$n.comparisons==1){
-    pre.var <- mm.var[1:he$n.comparisons,1:he$n.comparisons,]
+    pre.var <- mm.var
     prepost.var <- var.prior - pre.var
   }
   
@@ -34,7 +34,7 @@ fit.var.regression <- function(mm.var, var.prior, fit, N.calc, row, column, he, 
                    N = length(N.calc),
                    shape.Nmax = 0.0005 / max(N.calc),
                    var.PI = as.matrix(var.fit)[row, column],
-                   Nmax = max(N.calc),
+                   Nmax.par = max(N.calc)/2,
                    y = as.vector(prepost.var),
                    x = as.vector(N.calc)
   )
@@ -42,16 +42,16 @@ fit.var.regression <- function(mm.var, var.prior, fit, N.calc, row, column, he, 
   ## Specify Bayesian model
   model.ab <- c("model
                 {
-                beta ~ dnorm(Nmax/2, shape.Nmax)  T(0.00000E+00, )
+                beta ~ dnorm(Nmax.par, shape.Nmax)  I(0.00000E+00, )
                 for (i in 1:N) {
                 y[i] ~ dnorm(mu[i], tau)
                 mu[i] <- var.PI * (x[i]/(x[i] + beta))
                 }
-                sigma ~ dt(sigma.mu, sigma.tau, 3)  T(0.00000E+00, )
-                tau <- 1/sigma^2
+                sigma ~ dt(sigma.mu, sigma.tau, 3)  I(0.00000E+00, )
+                tau <- 1/sigma*sigma
                 }
                 ")
-  file.curve.fitting <- file.path("~",fileext="model_curve_fitting_EVSI.txt")
+  file.curve.fitting <- file.path("model_curve_fitting_EVSI.txt")
   writeLines(model.ab,file.curve.fitting)
   
   ## Model set up
@@ -59,7 +59,9 @@ fit.var.regression <- function(mm.var, var.prior, fit, N.calc, row, column, he, 
   n.thin <- 1
   n.iter <- 3000 # Number of iterations per chain
   
-  beta.ab <- update.func(file.curve.fitting, data.a.b, c("beta"), n.burnin, n.iter, n.thin)      
+  beta.ab <- update.func(file.curve.fitting, data.a.b, c("beta"), n.burnin,
+                         n.iter, n.thin , 
+                         inits = list(c(beta = 1, sigma = sd(prepost.var)/2)))      
   
   return(beta.ab[,1])
 }
