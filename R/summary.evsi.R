@@ -16,7 +16,7 @@ summary.evsi<-function(obj.evsi, wtp = NULL, N = NULL, CI = NULL){
 
   ## Check conditions
   if(is.null(wtp)){
-    wtp <- obj.evsi$he$kstar[1]
+    wtp <- max(0,obj.evsi$he$kstar[1],na.rm=TRUE)
   }
   
   if(!wtp %in% obj.evsi$attrib$wtp) {
