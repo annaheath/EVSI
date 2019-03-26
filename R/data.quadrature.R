@@ -16,12 +16,12 @@ data.quadrature <- function(index.data, data, sample, Q, N){
   cluster.centre <- array(NA, dim = c(Q, sum(dat.num)))
   categorical.check <- length(unique(as.numeric(as.matrix(data.mat))))
   
-  if(categorical.check > 3){
+  if(categorical.check > 4){
     for(l in 1:Q){
-      cluster.centre[l,] <- apply(data.mat[which(cluster.allocation == l), ], 2, quantile, probs = 0.5, type = 1)
+      cluster.centre[l,] <- apply(data.mat[which(cluster.allocation == l), ], 2, mean)
     }
   }
-  if(categorical.check <= 3){
+  if(categorical.check <= 4){
     for(l in 1:Q){
       cluster.centre[l,] <- apply(data.mat[which(cluster.allocation == l), ], 2, sample, 1)
     }
