@@ -62,7 +62,7 @@ gen.data<-function(model.stats, data, N.name = NULL, N.size = NULL, moment.match
   # Set sample size if provided by user
   if(!is.null(N.name)){
     if(is.null(N.size)){stop("Please specify the required sample size estimation for the proposed data collection exercise.")}
-    N.size <- trunc((seq(sqrt(min(N.size)),sqrt(max(N.size)),length.out = Q))^2)
+    N.size <- round(exp(seq(log(min(N.size)),log(max(N.size)),length.out = Q)))
     N.max <- list(max(N.size))
     names(N.max) <- N.name
     data.stats.update <- append(data.stats, N.max)
