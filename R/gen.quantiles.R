@@ -43,7 +43,7 @@ gen.quantiles <- function(parameter, param.mat, Q, N.size = NULL){
   }
     
     if (!is.null(N.size)) {
-      N.size <- trunc((seq(sqrt(min(N.size)),sqrt(max(N.size)),length.out = Q))^2)
+      N.size <- round(exp(seq(log(min(N.size)),log(max(N.size)),length.out = Q)))
       quantiles.aug <- cbind(quantiles.parameters, N = N.size)
       quantiles.parameters <- quantiles.aug
     }
