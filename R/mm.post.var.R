@@ -102,7 +102,7 @@ mm.post.var <- function(model.stats, data, N.name = NULL, N.size = NULL,
   # Set sample size if provided by user
   if(!is.null(N.name)){
     if(is.null(N.size)){"Please specify the required sample size estimation for the proposed data collection exercise."}
-    N.size <- trunc((seq(sqrt(min(N.size)),sqrt(max(N.size)),length.out = Q))^2)
+    N.size <- round(exp(seq(log(min(N.size)),log(max(N.size)),length.out = Q)))
     N.max <- list(max(N.size))
     names(N.max) <- N.name
     data.stats.update <- append(data.stats, N.max)
@@ -149,21 +149,21 @@ mm.post.var <- function(model.stats, data, N.name = NULL, N.size = NULL,
         stop("You need to install the R package 'BCEA'. Please run in your R terminal:\n install.packages('BCEA')")
       }
       # Calculate costs and effects for all simulations
-      i<-1
+      i <<- 1
       # Set function arguements
       formals(effects) <- find.args(effects, sample.pp, monitor, i)
       # Runs model with all arguements set as above
       model.effects <- effects()
-      e <- c <- matrix(NA, nrow=dim(sample.pp)[1], ncol=length(model.effects))
-      
+      e <- c. <- matrix(NA, nrow=dim(sample.pp)[1], ncol=length(model.effects))
       for(i in 1:dim(sample.pp)[1]){
+        i <<- i
         formals(effects) <- find.args(effects, sample.pp, monitor, i)
-        e[i,] <- effects()
         formals(costs) <- find.args(costs, sample.pp, monitor, i)
-        c[i,] <- costs()
+        e[i,] <- eval(effects(), envir=parent.frame())
+        c.[i,] <- eval(costs(), envir=parent.frame())
       }
       
-      he <- BCEA::bcea(e, c)
+      he <- BCEA::bcea(e, c.)
     }
 
     if(class(evi)!="evppi"){
@@ -197,12 +197,14 @@ mm.post.var <- function(model.stats, data, N.name = NULL, N.size = NULL,
       # Use the JAGS output as inputs for the effects and costs functions
       incremental.benefit <- matrix(NA, nrow=dim(sample.dat)[1], ncol=2*he$n.comparisons)
 
+      
       #Calculate costs and effects for all simulations
       for(i in 1:dim(sample.dat)[1]){
+        i <<- i
         formals(effects) <- find.args(effects, sample.dat, monitor, i)
-        model.effects <- effects()
         formals(costs) <- find.args(costs, sample.dat, monitor, i)
-        model.costs <- costs()
+        model.effects <- eval(effects(), envir=parent.frame())
+        model.costs <- eval(costs(), envir=parent.frame())
         incremental.benefit[i,] <- cbind(model.effects[-he$ref] - model.effects[he$ref], model.costs[- he$ref] - model.costs[he$ref])
       }
       
