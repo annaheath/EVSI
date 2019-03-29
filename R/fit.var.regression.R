@@ -32,7 +32,7 @@ fit.var.regression <- function(mm.var, var.prior, fit, N.calc, row, column, he, 
   data.a.b <- list(sigma.mu = sd(prepost.var)/2,
                    sigma.tau = sigma.tau,
                    N = length(N.calc),
-                   shape.Nmax = 0.0005 / max(N.calc),
+                   shape.Nmax = 0.05 / max(N.calc),
                    var.PI = as.numeric(as.matrix(var.fit)[row, column]),
                    Nmax.par = max(N.calc)/2,
                    y = as.vector(prepost.var),
@@ -42,13 +42,13 @@ fit.var.regression <- function(mm.var, var.prior, fit, N.calc, row, column, he, 
   ## Specify Bayesian model
   model.ab <- c("model
                 {
-                beta ~ dnorm(Nmax.par, shape.Nmax)  T(0.00000E+00, )
+                beta ~ dnorm(Nmax.par, shape.Nmax)  I(0.00000E+00, )
                 for (i in 1:N) {
                 y[i] ~ dnorm(mu[i], tau)
                 mu[i] <- var.PI * (x[i]/(x[i] + beta))
                 }
-                sigma ~ dt(sigma.mu, sigma.tau, 3)  T(0.00000E+00, )
-                tau <- 1/sigma*sigma
+                sigma ~ dt(sigma.mu, sigma.tau, 3)  I(0.00000E+00, )
+                tau <- 1/(sigma*sigma)
                 }
                 ")
   file.curve.fitting <- file.path("model_curve_fitting_EVSI.txt")
