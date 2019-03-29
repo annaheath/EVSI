@@ -28,8 +28,8 @@ evsi.calc<-function(mm.var, wtp=NULL, N=NULL, CI=NULL){
   ##'   economic model
   ##'   @example
   ##'   ...
-
-
+  
+  
   if(class(mm.var)!= c("mm.var")){stop("mm.var must either be calculated using the mm.post.var function.")}
   
   ### Set up
@@ -40,7 +40,7 @@ evsi.calc<-function(mm.var, wtp=NULL, N=NULL, CI=NULL){
     wtp <- mm.var$he$k
   }
   wtp.length <- length(wtp)
-
+  
   # Format N
   cl <- class(N)
   # Select all N values if NULL
@@ -57,30 +57,30 @@ evsi.calc<-function(mm.var, wtp=NULL, N=NULL, CI=NULL){
   N.length.calc<- length(unique(mm.var$N.size))
   
   # Format CI
-    cl <- class(CI)
-    # Set the default CI values if NULL
-    if(cl != "numeric"){
-      if(N.length.calc == 1){
-        CI <- "No Uncertainty"
-      }
-      else{
-        CI <- c(0.025, 0.25, 0.5, 0.75, 0.975)
-      }
+  cl <- class(CI)
+  # Set the default CI values if NULL
+  if(cl != "numeric"){
+    if(N.length.calc == 1){
+      CI <- "No Uncertainty"
     }
-    #Set N as requested by user
-    if(cl == "numeric"){
-      CI <- CI
-      CI.inv <- 1 - CI
-      CI <- ordered(unique(CI, CI.inv))
+    else{
+      CI <- c(0.025, 0.25, 0.5, 0.75, 0.975)
     }
-    CI.length <- length(CI)
-
+  }
+  #Set N as requested by user
+  if(cl == "numeric"){
+    CI <- CI
+    CI.inv <- 1 - CI
+    CI <- ordered(unique(CI, CI.inv))
+  }
+  CI.length <- length(CI)
+  
   ### Calcualte the EVSI
   e.var <- var(mm.var$he$delta.e)
   c.var <- var(mm.var$he$delta.c)
   e.fit <- as.matrix(mm.var$evppi$fitted.effects[, -mm.var$he$n.comparators])
   c.fit <- as.matrix(mm.var$evppi$fitted.costs[, -mm.var$he$n.comparators])
-    
+  
   simplify.var <- simplify2array(mm.var$variance.Q)
   
   if(N.length.calc == 1){
@@ -92,51 +92,51 @@ evsi.calc<-function(mm.var, wtp=NULL, N=NULL, CI=NULL){
     N.true <- N
     N <- NA
     index <- matrix(seq(1, mm.var$he$n.comparisons^2), nrow = mm.var$he$n.comparisons)
-    }
+  }
   
   if(N.length.calc > 1){
-  ## Multiple sample sizes
-  n.unique.entries <- mm.var$he$n.comparisons * (mm.var$he$n.comparisons + 1) / 2
-  beta.mat <- array(NA,dim = c(3000, 2, n.unique.entries))
-  index <- matrix(NA, nrow = mm.var$he$n.comparisons, ncol = mm.var$he$n.comparisons)
-  
-  
-  n.entry <- 1
-  for(i in 1:mm.var$he$n.comparisons){
-    for(j in i:mm.var$he$n.comparisons){
-      beta.mat[,1,n.entry] <- fit.var.regression(
-        simplify.var[1:mm.var$he$n.comparisons, 1:mm.var$he$n.comparisons,],
-        e.var, e.fit, mm.var$N.size, i, j, mm.var$he, mm.var$update)
-      beta.mat[,2,n.entry] <- fit.var.regression(
-        simplify.var[(mm.var$he$n.comparisons + 1):(2 * mm.var$he$n.comparisons),
-        (mm.var$he$n.comparisons + 1):(2 * mm.var$he$n.comparisons),], 
-        c.var, c.fit, mm.var$N.size, i, j, mm.var$he, mm.var$update)
-      # How to populate the variance matrices
-      index[i, j] <- index[j, i] <- n.entry
-      n.entry<-n.entry+1
+    ## Multiple sample sizes
+    n.unique.entries <- mm.var$he$n.comparisons * (mm.var$he$n.comparisons + 1) / 2
+    beta.mat <- array(NA,dim = c(3000, 2, n.unique.entries))
+    index <- matrix(NA, nrow = mm.var$he$n.comparisons, ncol = mm.var$he$n.comparisons)
+    
+    
+    n.entry <- 1
+    for(i in 1:mm.var$he$n.comparisons){
+      for(j in i:mm.var$he$n.comparisons){
+        beta.mat[,1,n.entry] <- fit.var.regression(
+          simplify.var[1:mm.var$he$n.comparisons, 1:mm.var$he$n.comparisons,],
+          e.var, e.fit, mm.var$N.size, i, j, mm.var$he, mm.var$update)
+        beta.mat[,2,n.entry] <- fit.var.regression(
+          simplify.var[(mm.var$he$n.comparisons + 1):(2 * mm.var$he$n.comparisons),
+                       (mm.var$he$n.comparisons + 1):(2 * mm.var$he$n.comparisons),], 
+          c.var, c.fit, mm.var$N.size, i, j, mm.var$he, mm.var$update)
+        # How to populate the variance matrices
+        index[i, j] <- index[j, i] <- n.entry
+        n.entry<-n.entry+1
+      }
     }
+    
+    # Use CI to create a beta matrix
+    # Find the appropriate quantiles for the beta parameter of interest
+    beta.quantiles <- array(apply(beta.mat, c(2,3), quantile, prob=CI),
+                            dim = c(CI.length, 2, n.unique.entries))
+    
+    #Extracting the beta parameter for the costs and effects
+    mean.var.e<-beta.quantiles[,1,]
+    mean.var.c<-beta.quantiles[,2,]
   }
-
-  # Use CI to create a beta matrix
-  # Find the appropriate quantiles for the beta parameter of interest
-  beta.quantiles <- array(apply(beta.mat, c(2,3), quantile, prob=CI),
-                          dim = c(CI.length, 2, n.unique.entries))
-
-  #Extracting the beta parameter for the costs and effects
-  mean.var.e<-beta.quantiles[,1,]
-  mean.var.c<-beta.quantiles[,2,]
-  }
-
+  
   e.rescaled <- array(NA, dim=c(dim(e.fit), N.length, CI.length))
   c.rescaled <- array(NA, dim=c(dim(c.fit), N.length, CI.length))
   for(i in 1:CI.length){
     e.rescaled[, , , i] <- sapply(N,rescale.fitted,
-                        mean.var = matrix(as.matrix(mean.var.e)[i, index],
-                                          nrow = mm.var$he$n.comparisons,
-                                          ncol = mm.var$he$n.comparisons),
-                        fit = e.fit,
-                        prior.var = e.var,
-                        he = mm.var$he)
+                                  mean.var = matrix(as.matrix(mean.var.e)[i, index],
+                                                    nrow = mm.var$he$n.comparisons,
+                                                    ncol = mm.var$he$n.comparisons),
+                                  fit = e.fit,
+                                  prior.var = e.var,
+                                  he = mm.var$he)
     c.rescaled[, , , i] <- sapply(N,rescale.fitted,
                                   mean.var = matrix(as.matrix(mean.var.c)[i, index],
                                                     nrow = mm.var$he$n.comparisons,
@@ -145,8 +145,8 @@ evsi.calc<-function(mm.var, wtp=NULL, N=NULL, CI=NULL){
                                   prior.var = c.var,
                                   he = mm.var$he)
   }
-
-
+  
+  
   wtp.func<-function(wtp.s,i,j,he){
     INB.star <- wtp.s * (- e.rescaled[, , j, i]) + c.rescaled[, , j, i]
     INB.augment <- as.data.frame(cbind(INB.star,0))
@@ -155,14 +155,14 @@ evsi.calc<-function(mm.var, wtp=NULL, N=NULL, CI=NULL){
       max(apply(INB.augment, 2, mean.func))
     return(EVSI)
   }
-
+  
   EVSI.mat <- array(NA, dim = c(N.length, wtp.length, CI.length))
   for(i in 1:CI.length){
     for(j in 1:N.length){
-        EVSI.mat[j, , i] <- sapply(wtp, wtp.func, i = i, j = j, he = mm.var$he)
+      EVSI.mat[j, , i] <- sapply(wtp, wtp.func, i = i, j = j, he = mm.var$he)
     }
   }
-
+  
   if(is.na(N[1])){
     N <- N.true
   }
