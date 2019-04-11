@@ -61,10 +61,10 @@ optim.samplesize<-function(evsi,setup,pp,Pop,Time,wtp=NULL,Dis=0.035){
   tol<-ENBS.max-abs(ENBS.max*0.05)
   limits<-which(ENBS>tol)
   N.range<-range(evsi$attrib$N[limits])
-  ENBS.range<-ENBS[which(evsi$attrib$N %in% N.range)]
-  if(length(ENBS.range)==1){ENBS.range[2]<-ENBS.range}
+  #ENBS.range<-ENBS[which(evsi$attrib$N %in% N.range)]
+  #if(length(ENBS.range)==1){ENBS.range[2]<-ENBS.range}
   
-  return(list(SS.max=N.max,ENBS=ENBS.max,SS.I=N.range,ENBS.I=ENBS.range))
+  return(list(SS.max=N.max,ENBS=ENBS.max,SS.I=N.range))
   
 }
 
