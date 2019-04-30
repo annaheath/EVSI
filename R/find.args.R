@@ -10,7 +10,7 @@ find.args <- function(func, parameter.sims, monitor, row){
     # param.mat - a string with the name of a matrix parameter
     # param.names - a character vector with the names of all parameters
     param.values <- as.numeric(
-      parameter.sims[row, grep(paste("\\b",param.mat,"\\b",sep=""), param.names)]
+      parameter.sims[row, grep(paste("\\b",param.mat,sep=""), param.names)]
     )
     return(param.values)
   }
