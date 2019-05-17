@@ -26,8 +26,6 @@ evsi.calc<-function(mm.var, wtp=NULL, N=NULL, CI=NULL){
   ##'   EVPPI.
   ##'4. he A bcea object containing all the information about the underlying health
   ##'   economic model
-  ##'   @example
-  ##'   ...
   
   
   if(class(mm.var)!= c("mm.var")){stop("mm.var must either be calculated using the mm.post.var function.")}

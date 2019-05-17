@@ -703,7 +703,7 @@ launch.App<-function(...){
                                                                                                                                shiny::a("Development of a New Software Tool to Compute the Expected Value of Sample Information - An application to the HomeHealth intervention",href="https://sites.google.com/site/annaheathstats"),
                                                                                                                                shiny::em(", HESG Winter Meeting"),", 2018"),
                                                                                                                       shiny::p("Heath, A., Manolopoulou I. and Baio, G., ",
-                                                                                                                               shiny::a("Estimating the Expected Value of Sample Information across Diﬀerent Sample Sizes using Moment Matching and Non-Linear Regression",href="https://arxiv.org/pdf/1804.09590.pdf"),
+                                                                                                                               shiny::a("Estimating the Expected Value of Sample Information across Different Sample Sizes using Moment Matching and Non-Linear Regression",href="https://arxiv.org/pdf/1804.09590.pdf"),
                                                                                                                                shiny::em(", ArXiv"),", 2018")))
                                                                                         ),
                         #Optimal Sample Size
@@ -835,7 +835,7 @@ launch.App<-function(...){
                                                                                                                                                 shiny::a("Development of a New Software Tool to Compute the Expected Value of Sample Information - An application to the HomeHealth intervention",href="https://sites.google.com/site/annaheathstats"),
                                                                                                                                                 shiny::em(", HESG Winter Meeting"),", 2018"),
                                                                                                                                        shiny::p("Heath, A., Manolopoulou I. and Baio, G., ",
-                                                                                                                                                shiny::a("Estimating the Expected Value of Sample Information across Diﬀerent Sample Sizes using Moment Matching and Non-Linear Regression",
+                                                                                                                                                shiny::a("Estimating the Expected Value of Sample Information across Different Sample Sizes using Moment Matching and Non-Linear Regression",
                                                                                                                                                 href="https://arxiv.org/pdf/1804.09590.pdf"),
                                                                                                                                                 shiny::em(", ArXiv"),", 2018")))
                                                                                                          )

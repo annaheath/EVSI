@@ -26,6 +26,7 @@ object is not given then this argument must be provided.}
 \item{CI}{If EVSI is calculated across multiple sample sizes then this gives the confidence 
 level for the credible intervals of the EVSI. If NULL chosen as 95% and 75% intervals.}
 }
+}
 \value{
 An evsi object.
 1. evsi An array containing the EVSI by wtp, N and across different uncertaincies
@@ -34,8 +35,6 @@ An evsi object.
   EVPPI.
 4. he A bcea object containing all the information about the underlying health
   economic model
-  @example
-  ...
 }
 \description{
 Calculates the EVSI accross willingness-to-pay, sample size and gives uncertainty for these
