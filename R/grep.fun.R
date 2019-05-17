@@ -4,7 +4,10 @@ grep.fun <- function(parameter.name, model.file.text){
   ##'@param model.file.text - the text of a model file parsed as a character vector
   
   # The rows with the parameter names included 
-  positions <- grep(parameter.name, model.file.text, value = FALSE)
+  parameter.test <- paste("\\b",parameter.name,"\\b",sep="")
+  positions <- grep(parameter.test, model.file.text, value = FALSE)
+  if(length(positions)==0){  positions <- grep(paste("\\b",parameter.name,sep=""),
+                                             model.file.text, value = FALSE)}
   
   return(length(positions))
 }

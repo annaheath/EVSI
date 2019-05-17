@@ -23,12 +23,11 @@ fit.var.regression <- function(mm.var, var.prior, fit, N.calc, row, column, he, 
   }
   
   if(sd(prepost.var)==0){
-    sigma.tau=100
-  }
-  if(sd(prepost.var)!=0){
-    sigma.tau=1/sd(prepost.var)
+    beta.ab <- array(1E10,dim = c(3000,1))
   }
   
+  if(sd(prepost.var)!=0){
+    sigma.tau=1/sd(prepost.var)
   data.a.b <- list(sigma.mu = sd(prepost.var)/2,
                    sigma.tau = sigma.tau,
                    N = length(N.calc),
@@ -61,7 +60,8 @@ fit.var.regression <- function(mm.var, var.prior, fit, N.calc, row, column, he, 
   
   beta.ab <- update.func(file.curve.fitting, data.a.b, c("beta"), n.burnin,
                          n.iter, n.thin , 
-                         inits = list(c(beta = 1, sigma = sd(prepost.var)/2)))      
+                         inits = list(c(beta = 1, sigma = sd(prepost.var)/2))) 
+  }
   
   return(beta.ab[,1])
 }
