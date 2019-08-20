@@ -1,6 +1,7 @@
 # EVSI
-Based on a Bayesian health economic model which includes the current information about the model parameters and distributions for the future data collection, functions are available to calculate the Expected Value of Sample Information (EVSI) using the Heath et al. Moment Matching method (2017).
+Based on a Bayesian health economic model which includes the current information about the model parameters and distributions for the future data collection, functions are available to calculate the Expected Value of Sample Information (EVSI) using the Heath et al. Moment Matching method (2017, 2018).
 This package then contains a number of plots that present the EVSI and the Expected Net Benefit of Sampling (ENBS) to present and analysis the EVSI calculation. Finally, a `shiny` web application is available to dynamically explore the EVSI and present results to key stakeholders.
+A manual describing standard use for this package is included in this repository.
 
 # Installation
 The `EVSI` package is currently only available in a developement version through GitHub and must be installed using the package `devtools`
@@ -22,4 +23,4 @@ After installing the required dependancies, the `EVSI` package can be installed 
 ```R
 devtools::install_github("annaheath/EVSI")
 ```
-Note that the `EVSI` package is currently under active developement and therefore it is advisable to reinstall the package directly from GitHub before each use to ensure that you are using the most uptodate version.
+Note that the `EVSI` package is currently under active developement and therefore it is advisable to reinstall the package directly from GitHub before each use to ensure that you are using the most up to date version.
