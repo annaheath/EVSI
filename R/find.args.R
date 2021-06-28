@@ -19,6 +19,14 @@ find.args <- function(func, parameter.sims, monitor, row){
   args.names <- names(formals(func))
   param.names <- names(parameter.sims)
   
+  missing.names <- args.names[!(args.names %in% param.names)]
+  if(!is.na(missing.names)){
+    for(k in 1:length(missing.names)){
+      formals(func)[[missing.names[k]]] <- 
+        .GlobalEnv[[missing.names[k]]]
+    }
+  }
+  
   # Determine which columns contain vector parameters, i.e. parameters that only appear once in the 
   # dataframe of parameter simulations
   param.single <- which(sapply(monitor, grep.fun, model.file.text = param.names) == 1)
@@ -39,5 +47,6 @@ find.args <- function(func, parameter.sims, monitor, row){
         extract.param.mat(multi.names[i], param.names)
     }
   }
+  
   return(formals(func))
 }
