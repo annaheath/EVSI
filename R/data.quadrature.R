@@ -11,16 +11,18 @@ data.quadrature <- function(index.data, data, sample, Q, N){
   data.full <- list()
   data.future <- vector("list",Q)
   
-  matrix.data.test <- (length(grep(",",colnames(sample[,unlist(index.data)]))) != 0)
-  cors <- sapply(1:min(dat.num),function(i){
-    cor(sample[,index.data[[1]][i]],sample[,index.data[[2]][i]])
+  if(length(index.data) > 1){
+    matrix.data.test <- (length(grep(",",colnames(sample[,unlist(index.data)]))) != 0)
+    cors <- sapply(1:min(dat.num),function(i){
+      cor(sample[,index.data[[1]][i]],sample[,index.data[[2]][i]])
     })
-  correlation.test <- sign(quantile(cors, probs = c(0.025))) == sign(quantile(cors, probs = c(0.975)))
-  
-  if(matrix.data.test | correlation.test){
-    warning("Data generation within the EVSI package is not suitable for 
+    correlation.test <- sign(quantile(cors, probs = c(0.025))) == sign(quantile(cors, probs = c(0.975)))
+    
+    if(matrix.data.test | correlation.test){
+      warning("Data generation within the EVSI package is not suitable for 
             correlated data, please use the gen.quantiles function to
             generate the data externally.")
+    }
   }
   # Create a data matrix with only future data in it
   for(l in 1:length(data)){
