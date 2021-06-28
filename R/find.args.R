@@ -20,7 +20,7 @@ find.args <- function(func, parameter.sims, monitor, row){
   param.names <- names(parameter.sims)
   
   missing.names <- args.names[!(args.names %in% param.names)]
-  if(!is.na(missing.names)){
+  if(length(missing.names) >= 1){
     for(k in 1:length(missing.names)){
       formals(func)[[missing.names[k]]] <- 
         .GlobalEnv[[missing.names[k]]]
