@@ -44,7 +44,7 @@ data.quadrature <- function(index.data, data, sample, Q, N){
     cluster.centre <- array(NA, dim = c(Q, sum(dat.num)))
 
     for(j in 1:Q){
-      cluster.centre[j,] <- apply(data.mat[which(cluster.allocation == j), ], 2, sample, 1)
+      cluster.centre[j,] <- apply(data.mat[which(cluster.allocation == j), , drop = FALSE], 2, sample, 1)
     }
   }
     data.full[[l]] <- cluster.centre 
