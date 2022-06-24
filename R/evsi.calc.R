@@ -74,40 +74,41 @@ evsi.calc<-function(mm.var, wtp=NULL, N=NULL, CI=NULL){
   CI.length <- length(CI)
   
   ### Calcualte the EVSI
-  e.var <- var(mm.var$he$delta.e)
-  c.var <- var(mm.var$he$delta.c)
-  e.fit <- as.matrix(mm.var$evppi$fitted.effects[, -mm.var$he$n.comparators])
-  c.fit <- as.matrix(mm.var$evppi$fitted.costs[, -mm.var$he$n.comparators])
+  e.var <- var(mm.var$he$delta_e)
+  c.var <- var(mm.var$he$delta_c)
+  e.fit <- as.matrix(mm.var$evppi$fitted.effects[, -mm.var$he$n_comparators])
+  c.fit <- as.matrix(mm.var$evppi$fitted.costs[, -mm.var$he$n_comparators])
   
   simplify.var <- simplify2array(mm.var$variance.Q)
   
   if(N.length.calc == 1){
     ### One sample size
     mean.var <- apply(simplify.var, 1:2, mean)
-    mean.var.e <- mean.var[1:mm.var$he$n.comparisons, 1:mm.var$he$n.comparisons]
-    mean.var.c <- mean.var[(mm.var$he$n.comparisons + 1):(2 * mm.var$he$n.comparisons), (mm.var$he$n.comparisons + 1):(2 * mm.var$he$n.comparisons)]
+    mean.var.e <- mean.var[1:mm.var$he$n_comparisons, 1:mm.var$he$n_comparisons]
+    mean.var.c <- mean.var[(mm.var$he$n_comparisons + 1):(2 * mm.var$he$n_comparisons),
+                           (mm.var$he$n_comparisons + 1):(2 * mm.var$he$n_comparisons)]
     
     N.true <- N
     N <- NA
-    index <- matrix(seq(1, mm.var$he$n.comparisons^2), nrow = mm.var$he$n.comparisons)
+    index <- matrix(seq(1, mm.var$he$n_comparisons^2), nrow = mm.var$he$n_comparisons)
   }
   
   if(N.length.calc > 1){
     ## Multiple sample sizes
-    n.unique.entries <- mm.var$he$n.comparisons * (mm.var$he$n.comparisons + 1) / 2
+    n.unique.entries <- mm.var$he$n_comparisons * (mm.var$he$n_comparisons + 1) / 2
     beta.mat <- array(NA,dim = c(3000, 2, n.unique.entries))
-    index <- matrix(NA, nrow = mm.var$he$n.comparisons, ncol = mm.var$he$n.comparisons)
+    index <- matrix(NA, nrow = mm.var$he$n_comparisons, ncol = mm.var$he$n_comparisons)
     
     
     n.entry <- 1
-    for(i in 1:mm.var$he$n.comparisons){
-      for(j in i:mm.var$he$n.comparisons){
+    for(i in 1:mm.var$he$n_comparisons){
+      for(j in i:mm.var$he$n_comparisons){
         beta.mat[,1,n.entry] <- fit.var.regression(
-          simplify.var[1:mm.var$he$n.comparisons, 1:mm.var$he$n.comparisons,],
+          simplify.var[1:mm.var$he$n_comparisons, 1:mm.var$he$n_comparisons,],
           e.var, e.fit, mm.var$N.size, i, j, mm.var$he, mm.var$update)
         beta.mat[,2,n.entry] <- fit.var.regression(
-          simplify.var[(mm.var$he$n.comparisons + 1):(2 * mm.var$he$n.comparisons),
-                       (mm.var$he$n.comparisons + 1):(2 * mm.var$he$n.comparisons),], 
+          simplify.var[(mm.var$he$n_comparisons + 1):(2 * mm.var$he$n_comparisons),
+                       (mm.var$he$n_comparisons + 1):(2 * mm.var$he$n_comparisons),], 
           c.var, c.fit, mm.var$N.size, i, j, mm.var$he, mm.var$update)
         # How to populate the variance matrices
         index[i, j] <- index[j, i] <- n.entry
@@ -130,15 +131,15 @@ evsi.calc<-function(mm.var, wtp=NULL, N=NULL, CI=NULL){
   for(i in 1:CI.length){
     e.rescaled[, , , i] <- sapply(N,rescale.fitted,
                                   mean.var = matrix(as.matrix(mean.var.e)[i, index],
-                                                    nrow = mm.var$he$n.comparisons,
-                                                    ncol = mm.var$he$n.comparisons),
+                                                    nrow = mm.var$he$n_comparisons,
+                                                    ncol = mm.var$he$n_comparisons),
                                   fit = e.fit,
                                   prior.var = e.var,
                                   he = mm.var$he)
     c.rescaled[, , , i] <- sapply(N,rescale.fitted,
                                   mean.var = matrix(as.matrix(mean.var.c)[i, index],
-                                                    nrow = mm.var$he$n.comparisons,
-                                                    ncol = mm.var$he$n.comparisons),
+                                                    nrow = mm.var$he$n_comparisons,
+                                                    ncol = mm.var$he$n_comparisons),
                                   fit = c.fit,
                                   prior.var = c.var,
                                   he = mm.var$he)
@@ -148,8 +149,8 @@ evsi.calc<-function(mm.var, wtp=NULL, N=NULL, CI=NULL){
   wtp.func<-function(wtp.s,i,j,he){
     INB.star <- wtp.s * (- e.rescaled[, , j, i]) + c.rescaled[, , j, i]
     INB.augment <- as.data.frame(cbind(INB.star,0))
-    mean.func <- function(x){ sum(x) / he$n.sim }
-    EVSI <- sum(do.call(pmax, INB.augment))/he$n.sim -
+    mean.func <- function(x){ sum(x) / he$n_sim }
+    EVSI <- sum(do.call(pmax, INB.augment))/he$n_sim -
       max(apply(INB.augment, 2, mean.func))
     return(EVSI)
   }
