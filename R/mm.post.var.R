@@ -177,7 +177,7 @@ mm.post.var <- function(model.stats, data, N.name = NULL, N.size = NULL,
         index.param[[l]] <- grep(parameters[l], colnames(sample.pp))
       }
       param.columns <- unlist(index.param)
-      evi <- BCEA::evppi(param.columns, sample.pp, he)
+      evi <- BCEA::evppi(he,param.columns, sample.pp)
     }
 
 }
@@ -195,7 +195,7 @@ mm.post.var <- function(model.stats, data, N.name = NULL, N.size = NULL,
       # Sample from Bayesian updating
       sample.dat <- update.func(model.stats, data.full, monitor, n.burnin, n.iter, n.thin)
       # Use the JAGS output as inputs for the effects and costs functions
-      incremental.benefit <- matrix(NA, nrow=dim(sample.dat)[1], ncol=2*he$n.comparisons)
+      incremental.benefit <- matrix(NA, nrow=dim(sample.dat)[1], ncol=2*he$n_comparisons)
 
       
       #Calculate costs and effects for all simulations
