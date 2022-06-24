@@ -13,11 +13,11 @@ fit.var.regression <- function(mm.var, var.prior, fit, N.calc, row, column, he, 
   
   # Specify data for non-linear regression fit.
   var.PI=x=NULL
-  if(he$n.comparisons>1){
+  if(he$n_comparisons>1){
     pre.var <- mm.var
     prepost.var <- t(var.prior[row, column] - pre.var[row, column, ])
   }
-  if(he$n.comparisons==1){
+  if(he$n_comparisons==1){
     pre.var <- mm.var
     prepost.var <- var.prior - pre.var
   }
