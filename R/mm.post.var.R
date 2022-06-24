@@ -111,7 +111,7 @@ mm.post.var <- function(model.stats, data, N.name = NULL, N.size = NULL,
   ### Prior predictive distribution
 
   # When prior predictive sampling is required
-  if((cl.dat=="character")|(class(he)!="bcea")|(class(evi)!="evppi")){
+  if((cl.dat=="character")|(class(he)[1]!="bcea")|(class(evi)!="evppi")){
     if(is.null(N.size)){data.stats.update <- data.stats}
     monitor.data <- monitor
     
