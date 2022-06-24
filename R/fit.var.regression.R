@@ -19,7 +19,7 @@ fit.var.regression <- function(mm.var, var.prior, fit, N.calc, row, column, he, 
   }
   if(he$n_comparisons==1){
     pre.var <- mm.var
-    prepost.var <- var.prior - pre.var
+    prepost.var <- rep(var.prior, length(pre.var)) - pre.var
   }
   
   if(sd(prepost.var)==0){

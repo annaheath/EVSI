@@ -14,12 +14,12 @@ rescale.fitted<-function(mean.var, prior.var, fit, he, N = NA){
   }
   
   # Rescale fitted values
-  if(he$n.comparisons == 1){
+  if(he$n_comparisons == 1){
     prepost.var <- max(0, prior.var - mean.var)
     rescaled <- (fit - mean(fit)) / sd(fit) * sqrt(prepost.var) + mean(fit)
   }
   
-  if(he$n.comparisons>1){
+  if(he$n_comparisons>1){
     prepost.var <- prior.var - mean.var
     prepost.eigen.decomp <- base::eigen(prepost.var)
     # Matrix sqrt - from https://stat.ethz.ch/pipermail/r-help/2007-January/124147.html
